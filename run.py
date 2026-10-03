@@ -55,7 +55,7 @@ RUN_CONFIGURATIONS = {
         "run_models_list": ["piecewise", "sigmoid", "logG", "loglinear"],
         "plot_models_list": ["piecewise", "sigmoid", "logG"],
 
-        "run_fits": True,
+        "run_fits": False,
         "make_plots": True,
     },
 
@@ -80,7 +80,7 @@ RUN_CONFIGURATIONS = {
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run.py``). Set to None to run every entry.
-RUNS_TO_DO = ["stellar_3params"]
+RUNS_TO_DO = ["paper_bounds"]
 
 
 RUN_DEFAULTS = {
@@ -128,8 +128,8 @@ RUN_DEFAULTS = {
     "bpl_slope_bounds": (-4.0, 4.0),
     "loglinear_amplitude_bounds": (1e-6, 10.0),
     "nwalkers": 50,
-    "nsteps": 500,
-    "burnin": 200,
+    "nsteps": 5000,
+    "burnin": 2000,
     "random_seed": 1234,
     "parallel_fits": True,
     "parallel_mcmc": False,
