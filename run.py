@@ -41,6 +41,7 @@ from config_dict import tier2_df_cuts_dict  # noqa: E402
 # experiments here instead of copying or commenting out call blocks.
 RUN_CONFIGURATIONS = {
 
+    # Main run for paper results
     "paper_bounds": {
         "tier1_list": ["mtrue", "qtrue"],
         "tier2_list": [
@@ -60,6 +61,7 @@ RUN_CONFIGURATIONS = {
         "make_plots": True,
     },
 
+    # 3params runs for tables
     "stellar_3params": {
         "tier1_list": ["mtrue"],
         "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
@@ -75,10 +77,25 @@ RUN_CONFIGURATIONS = {
         "run_fits":True,
         "make_plots":True,
     },
+    
+    # 3params runs for Miyazaki comparison
+    "stellar_3params_Miyazaki": {
+        "tier1_list": ["mtrue"],
+        "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
+                      'highMstarlowFeHhighAct', 'highMstarlowFeHlowAct',
+                      'lowMstarhighFeHhighAct', 'lowMstarhighFeHlowAct',
+                      'lowMstarlowFeHhighAct', 'lowMstarlowFeHlowAct'],
+        "tier3_list": ["stellar_3params_Miyazaki"],
+        "a_edges": [1, 5],
+        "m_edges": [0.3, 0.6, 1.2, 2.4, 5, 10],
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
 
-    # Derived run: replots the paper_bounds fits with a different model set.
-    # Its results folder links to the source's saved chains (see
-    # DERIVED_RUN_KEYS), so it never refits.
+        "run_fits":True,
+        "make_plots":True,
+    },
+
+    # Loglinear fit to Mtrue allstars
     "paper_bounds_loglinear": {
         "reuse_fits_from": "paper_bounds",
         "tier1_list": ["mtrue"],
@@ -100,7 +117,7 @@ RUN_CONFIGURATIONS = {
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run.py``). Set to None to run every entry.
-RUNS_TO_DO = ["paper_bounds"]
+RUNS_TO_DO = ["stellar_3params", "stellar_3params_Miyazaki", "paper_bounds_loglinear"]
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
@@ -587,4 +604,4 @@ def main(
 
 
 if __name__ == "__main__":
-    print(main())
+    print(main(run_names=RUNS_TO_DO))
