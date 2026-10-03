@@ -9,11 +9,12 @@ SAMPLE_DEFINITIONS = {
     "lowFeH": ("feh <= 0", r"[Fe/H] $\leq$ 0"),
     "highAct": (
         "logrhk > -4.969 & 0.82 <= Mstar <= 1.21",
-        r"$\log R^{\prime}_{HK} > -4.969$",
+        # log R'_HK = -4.969 corresponds to 5.0 Gyr (Mamajek & Hillenbrand 2008).
+        "Age < 5.0 Gyr",
     ),
     "lowAct": (
         "logrhk <= -4.969 & 0.82 <= Mstar <= 1.21",
-        r"$\log R^{\prime}_{HK} \leq -4.969$",
+        r"Age $\geq$ 5.0 Gyr",
     ),
 }
 
