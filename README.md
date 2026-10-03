@@ -7,6 +7,28 @@ selected entry in `RUN_CONFIGURATIONS`. `RUNS_TO_DO` lists the entries to run
 by default; set it to `None` to run all of them, or pass `run_names` to
 `main()` to override it.
 
+## Machine-specific input paths
+
+The injection-recovery files and companion posteriors are too large to keep
+in the repository, so each machine records where they live in an untracked
+`local_paths.json`. Create it from the template and edit both entries:
+
+```bash
+cp local_paths.example.json local_paths.json
+```
+
+```json
+{
+  "recoveries_dir": "/absolute/path/to/cls_recoveries",
+  "posteriors_dir": "/absolute/path/to/resampled_posteriors_1ksamples"
+}
+```
+
+`run.py` stops with an explanatory error if the file or either entry is
+missing.
+
+## Running
+
 The default executable behavior is:
 
 ```bash

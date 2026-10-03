@@ -63,3 +63,37 @@ def test_runs_to_do_rejects_unknown_names(monkeypatch):
     monkeypatch.setattr(run, "RUNS_TO_DO", ["not_a_run"])
     with pytest.raises(ValueError, match="unknown runs"):
         run._selected_run_names(None)
+
+
+def test_load_local_paths_reads_both_directories(tmp_path):
+    path = tmp_path / "local_paths.json"
+    path.write_text(json.dumps({
+        "recoveries_dir": str(tmp_path / "recoveries"),
+        "posteriors_dir": str(tmp_path / "posteriors"),
+    }))
+
+    paths = run.load_local_paths(path)
+
+    assert paths == {
+        "recoveries_dir": (tmp_path / "recoveries").resolve(),
+        "posteriors_dir": (tmp_path / "posteriors").resolve(),
+    }
+
+
+def test_load_local_paths_explains_missing_file(tmp_path):
+    with pytest.raises(FileNotFoundError, match="local_paths.example.json"):
+        run.load_local_paths(tmp_path / "local_paths.json")
+
+
+def test_load_local_paths_rejects_missing_entries(tmp_path):
+    path = tmp_path / "local_paths.json"
+    path.write_text(json.dumps({"recoveries_dir": "/data/recoveries"}))
+
+    with pytest.raises(ValueError, match="posteriors_dir"):
+        run.load_local_paths(path)
+
+
+def test_example_local_paths_lists_every_key():
+    with run.LOCAL_PATHS_EXAMPLE.open() as stream:
+        example = json.load(stream)
+    assert set(example) == set(run.LOCAL_PATH_KEYS)

@@ -18,9 +18,12 @@ PROJECT_DIR = Path(__file__).resolve().parent
 OCCURRENCE_DIR = PROJECT_DIR.parent / "occurrence"
 RESULTS_DIR = PROJECT_DIR / "results"
 STAR_CATALOG = PROJECT_DIR / "data" / "derived" / "star_catalog.json"
-RECOVERIES_DIR = Path("/Users/judahvz/research/code/my_papers/bd_desert/cls_recoveries")
 
-POSTERIORS_DIR = PROJECT_DIR / "resampled_posteriors_1ksamples"
+# Machine-specific input locations live in an untracked JSON file, because the
+# recoveries and posteriors are too large to keep in the repository.
+LOCAL_PATHS_FILE = PROJECT_DIR / "local_paths.json"
+LOCAL_PATHS_EXAMPLE = PROJECT_DIR / "local_paths.example.json"
+LOCAL_PATH_KEYS = ("recoveries_dir", "posteriors_dir")
 
 # occurrence is currently a sibling checkout rather than an installed package.
 if str(OCCURRENCE_DIR.parent) not in sys.path:
@@ -259,6 +262,25 @@ def load_or_make_star_df(cache_path=STAR_CATALOG, rebuild=False):
     return star_df
 
 
+def load_local_paths(path=LOCAL_PATHS_FILE):
+    """Read this machine's input directories from ``local_paths.json``."""
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(
+            "{} not found; copy {} to {} and set this machine's "
+            "paths".format(path, LOCAL_PATHS_EXAMPLE.name, path.name)
+        )
+    with path.open() as stream:
+        configured = json.load(stream)
+    missing = [key for key in LOCAL_PATH_KEYS if not configured.get(key)]
+    if missing:
+        raise ValueError("{} is missing entries: {}".format(path, missing))
+    return {
+        key: (PROJECT_DIR / Path(configured[key]).expanduser()).resolve()
+        for key in LOCAL_PATH_KEYS
+    }
+
+
 def _selected_run_names(run_names):
     if run_names is None:
         run_names = RUNS_TO_DO
@@ -313,8 +335,8 @@ def main(
         rebuild_star_catalog=False,
         make_post_fit_tables=False,
         output_dir=RESULTS_DIR,
-        recoveries_dir=RECOVERIES_DIR,
-        comp_post_dir=POSTERIORS_DIR):
+        recoveries_dir=None,
+        comp_post_dir=None):
     """Validate and execute the selected paper calculations.
 
     ``run_names`` selects keys from ``RUN_CONFIGURATIONS``; when omitted,
@@ -324,7 +346,8 @@ def main(
     ``make_plots=False`` to skip plots.
     ``dry_run`` reports expanded sample sizes and paths without creating
     results. ``validate_only`` also verifies required input directories, then
-    stops.
+    stops. ``recoveries_dir`` and ``comp_post_dir`` default to the
+    ``recoveries_dir`` and ``posteriors_dir`` entries in ``local_paths.json``.
     """
     names = _selected_run_names(run_names)
     for name in names:
@@ -337,6 +360,12 @@ def main(
     star_df = load_or_make_star_df(rebuild=rebuild_star_catalog)
     validate_star_df(star_df, selected_samples)
 
+    if recoveries_dir is None or comp_post_dir is None:
+        local_paths = load_local_paths()
+        if recoveries_dir is None:
+            recoveries_dir = local_paths["recoveries_dir"]
+        if comp_post_dir is None:
+            comp_post_dir = local_paths["posteriors_dir"]
     recoveries_dir = Path(recoveries_dir)
     comp_post_dir = Path(comp_post_dir)
     output_dir = Path(output_dir)
