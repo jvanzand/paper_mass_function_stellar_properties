@@ -8,6 +8,7 @@ this file, so launching it from another working directory is safe.
 
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -75,12 +76,46 @@ RUN_CONFIGURATIONS = {
         "make_plots":True,
     },
 
+    # Derived run: replots the paper_bounds fits with a different model set.
+    # Its results folder links to the source's saved chains (see
+    # DERIVED_RUN_KEYS), so it never refits.
+    "paper_bounds_loglinear": {
+        "reuse_fits_from": "paper_bounds",
+        "tier1_list": ["mtrue"],
+        "tier2_list": ["allstars"],
+        "plot_models_list": ["piecewise", "loglinear"],
+
+        "make_plots": True,
+        "plot_density": True,
+        "plot_occurrence": False,
+        "plot_cumulative": False,
+        "plot_corner": False,
+        "plot_catalog_roi": False,
+        "plot_roi_occurrence": False,
+        "plot_uncorrected_occurrence_mle": True,
+    },
+
 }
 
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run.py``). Set to None to run every entry.
 RUNS_TO_DO = ["paper_bounds"]
+
+
+# Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
+# edges and fit settings, is inherited from the source run so the plots always
+# describe the fits they reuse.
+PLOT_OPTION_KEYS = {
+    "make_plots", "plot_models_list", "model_plot_style",
+    "n_posterior_draws", "plot_random_seed", "plot_occurrence",
+    "plot_density", "plot_cumulative", "plot_corner", "plot_catalog_roi",
+    "plot_roi_occurrence", "plot_uncorrected_occurrence_mle",
+    "occurrence_legend_loc",
+}
+DERIVED_RUN_KEYS = PLOT_OPTION_KEYS | {
+    "reuse_fits_from", "tier1_list", "tier2_list",
+}
 
 
 RUN_DEFAULTS = {
@@ -293,6 +328,124 @@ def _selected_run_names(run_names):
     return names
 
 
+def resolve_run_configuration(name):
+    """Return the full configuration for a run, expanding ``reuse_fits_from``.
+
+    A derived run starts from its source run's configuration, overrides only
+    plot options and tier subsets, writes to a Tier 3 folder named after
+    itself, and never fits.
+    """
+    entry = RUN_CONFIGURATIONS[name]
+    source_name = entry.get("reuse_fits_from")
+    if source_name is None:
+        return dict(entry)
+
+    if source_name not in RUN_CONFIGURATIONS:
+        raise ValueError("{} reuses fits from unknown run {!r}".format(
+            name, source_name
+        ))
+    source = RUN_CONFIGURATIONS[source_name]
+    if "reuse_fits_from" in source:
+        raise ValueError("{} cannot reuse fits from derived run {!r}".format(
+            name, source_name
+        ))
+    if len(source["tier3_list"]) != 1:
+        raise ValueError(
+            "{} must reuse a run with exactly one Tier 3 folder".format(name)
+        )
+    disallowed = sorted(set(entry) - DERIVED_RUN_KEYS)
+    if disallowed:
+        raise ValueError(
+            "{} reuses fits from {!r} and may only set plot options and tier "
+            "subsets; remove {}".format(name, source_name, disallowed)
+        )
+    for tier_key in ("tier1_list", "tier2_list"):
+        extra = sorted(set(entry.get(tier_key, [])) - set(source[tier_key]))
+        if extra:
+            raise ValueError("{} {} entries are not in {!r}: {}".format(
+                name, tier_key, source_name, extra
+            ))
+
+    configuration = dict(source)
+    configuration.update(entry)
+    configuration["tier3_list"] = [name]
+    configuration["source_tier3"] = source["tier3_list"][0]
+    configuration["run_fits"] = False
+    return configuration
+
+
+def _reused_fit_paths(name, configuration, output_dir):
+    """Map each derived Tier 3 folder to the source folder it reuses."""
+    source_tier3 = configuration["source_tier3"]
+    paths = []
+    for tier1 in configuration["tier1_list"]:
+        for tier2 in configuration["tier2_list"]:
+            tier2_dir = Path(output_dir) / tier1 / tier2
+            paths.append((tier2_dir / name, tier2_dir / source_tier3))
+    return paths
+
+
+def _check_reused_fits(name, configuration, output_dir):
+    """Require saved fits for every plotted model before anything runs."""
+    missing = []
+    for _, source_dir in _reused_fit_paths(name, configuration, output_dir):
+        chain_dir = source_dir / "saved_chains"
+        required = [source_dir / "saved_dicts" / "fit_data.npz"]
+        for model_name in configuration["plot_models_list"]:
+            if model_name == "piecewise":
+                required.append(chain_dir / "chains_piecewise.npz")
+            elif not list(chain_dir.glob("chains_{}_bin*.npz".format(
+                    model_name))):
+                required.append(chain_dir / "chains_{}_bin*.npz".format(
+                    model_name))
+        missing.extend(str(path) for path in required if not path.exists())
+    if missing:
+        raise FileNotFoundError(
+            "{} reuses fits that do not exist yet; run {!r} first. "
+            "Missing: {}".format(
+                name, configuration["reuse_fits_from"], missing
+            )
+        )
+
+
+def _relative_symlink(link, target):
+    """Point ``link`` at ``target`` with a relative path, reusing a match."""
+    relative_target = os.path.relpath(target, link.parent)
+    if link.is_symlink():
+        if os.readlink(link) == relative_target:
+            return
+        raise FileExistsError(
+            "{} already links to {}, not {}".format(
+                link, os.readlink(link), relative_target
+            )
+        )
+    if link.exists():
+        raise FileExistsError(
+            "{} exists and is not a link to {}".format(link, target)
+        )
+    link.symlink_to(relative_target)
+
+
+def link_reused_fits(name, configuration, output_dir):
+    """Link a derived run's folders to the saved fits of its source run.
+
+    ``saved_chains`` is linked whole. ``saved_dicts`` is a real folder holding
+    a link to ``fit_data.npz``, because plotting rewrites the piecewise summary
+    there and must not overwrite the source's copy.
+    """
+    paths = _reused_fit_paths(name, configuration, output_dir)
+    for derived_dir, source_dir in paths:
+        (derived_dir / "saved_dicts").mkdir(parents=True, exist_ok=True)
+        _relative_symlink(
+            derived_dir / "saved_chains", source_dir / "saved_chains"
+        )
+        _relative_symlink(
+            derived_dir / "saved_dicts" / "fit_data.npz",
+            source_dir / "saved_dicts" / "fit_data.npz",
+        )
+    return [str(derived_dir) for derived_dir, _ in paths]
+
+
 def _validate_run_configuration(name, configuration):
     for edge_name in ("a_edges", "m_edges"):
         edges = configuration[edge_name]
@@ -305,12 +458,16 @@ def _validate_run_configuration(name, configuration):
         raise ValueError("burnin must be smaller than nsteps")
 
 
-def _print_plan(names, star_df, output_dir):
+def _print_plan(configurations, star_df, output_dir):
     print("Catalog: {} stars".format(len(star_df)))
     print("Results: {}".format(output_dir))
-    for name in names:
-        config = RUN_CONFIGURATIONS[name]
-        print("{}:".format(name))
+    for name, config in configurations.items():
+        if "reuse_fits_from" in config:
+            print("{} (plots only, reusing {} fits):".format(
+                name, config["reuse_fits_from"]
+            ))
+        else:
+            print("{}:".format(name))
         for sample_name in config["tier2_list"]:
             query = tier2_df_cuts_dict[sample_name][0]["star_df_query"]
             count = len(star_df.query(query)) if query else len(star_df)
@@ -348,14 +505,19 @@ def main(
     results. ``validate_only`` also verifies required input directories, then
     stops. ``recoveries_dir`` and ``comp_post_dir`` default to the
     ``recoveries_dir`` and ``posteriors_dir`` entries in ``local_paths.json``.
+    Runs with ``reuse_fits_from`` always skip fitting, whatever ``run_fits``
+    says, and require the source run's saved fits to exist.
     """
     names = _selected_run_names(run_names)
-    for name in names:
-        _validate_run_configuration(name, RUN_CONFIGURATIONS[name])
+    configurations = {
+        name: resolve_run_configuration(name) for name in names
+    }
+    for name, configuration in configurations.items():
+        _validate_run_configuration(name, configuration)
     selected_samples = [
         sample
-        for name in names
-        for sample in RUN_CONFIGURATIONS[name]["tier2_list"]
+        for configuration in configurations.values()
+        for sample in configuration["tier2_list"]
     ]
     star_df = load_or_make_star_df(rebuild=rebuild_star_catalog)
     validate_star_df(star_df, selected_samples)
@@ -379,7 +541,11 @@ def main(
             )
         )
 
-    _print_plan(names, star_df, output_dir)
+    _print_plan(configurations, star_df, output_dir)
+    if validate_only:
+        for name, configuration in configurations.items():
+            if "reuse_fits_from" in configuration:
+                _check_reused_fits(name, configuration, output_dir)
     if validate_only or dry_run:
         return []
 
@@ -387,9 +553,15 @@ def main(
         raise ValueError("plots_only=True conflicts with run_fits=True")
 
     results = []
-    for name in names:
+    for name, configuration in configurations.items():
+        derived = "reuse_fits_from" in configuration
+        if derived:
+            _check_reused_fits(name, configuration, output_dir)
+            link_reused_fits(name, configuration, output_dir)
         arguments = dict(RUN_DEFAULTS)
-        arguments.update(RUN_CONFIGURATIONS[name])
+        arguments.update(configuration)
+        for key in ("reuse_fits_from", "source_tier3"):
+            arguments.pop(key, None)
         arguments.update({
             "star_df": star_df,
             "tier2_df_cuts_dict": tier2_df_cuts_dict,
@@ -405,6 +577,8 @@ def main(
             arguments["run_fits"] = run_fits
         if make_plots is not None:
             arguments["make_plots"] = make_plots
+        if derived:
+            arguments["run_fits"] = False
         results.extend(occurrence_run.run_multiple(**arguments))
 
     if make_post_fit_tables:

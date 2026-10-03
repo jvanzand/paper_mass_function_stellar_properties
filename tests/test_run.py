@@ -1,6 +1,7 @@
 """Small regression suite for the paper orchestration layer."""
 
 import json
+import os
 
 import pytest
 
@@ -97,3 +98,135 @@ def test_example_local_paths_lists_every_key():
     with run.LOCAL_PATHS_EXAMPLE.open() as stream:
         example = json.load(stream)
     assert set(example) == set(run.LOCAL_PATH_KEYS)
+
+
+def _source_and_derived_runs(**derived_overrides):
+    source = {
+        "tier1_list": ["mtrue", "qtrue"],
+        "tier2_list": ["allstars", "highMstar"],
+        "tier3_list": ["source_run"],
+        "a_edges": [0.1, 10.0],
+        "m_edges": [0.4, 13.0, 50.0],
+        "run_models_list": ["piecewise", "loglinear"],
+        "plot_models_list": ["piecewise"],
+        "run_fits": True,
+        "plot_corner": True,
+    }
+    derived = {
+        "reuse_fits_from": "source_run",
+        "tier1_list": ["mtrue"],
+        "tier2_list": ["allstars"],
+        "plot_models_list": ["piecewise", "loglinear"],
+        "plot_corner": False,
+        **derived_overrides,
+    }
+    return {"source_run": source, "derived_run": derived}
+
+
+def test_derived_run_inherits_source_and_never_fits(monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS", _source_and_derived_runs()
+    )
+
+    configuration = run.resolve_run_configuration("derived_run")
+
+    assert configuration["m_edges"] == [0.4, 13.0, 50.0]
+    assert configuration["tier1_list"] == ["mtrue"]
+    assert configuration["tier3_list"] == ["derived_run"]
+    assert configuration["source_tier3"] == "source_run"
+    assert configuration["plot_models_list"] == ["piecewise", "loglinear"]
+    assert configuration["plot_corner"] is False
+    assert configuration["run_fits"] is False
+
+
+def test_derived_run_rejects_fit_settings(monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS",
+        _source_and_derived_runs(m_edges=[0.4, 50.0]),
+    )
+    with pytest.raises(ValueError, match="m_edges"):
+        run.resolve_run_configuration("derived_run")
+
+
+def test_derived_run_rejects_tiers_missing_from_source(monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS",
+        _source_and_derived_runs(tier2_list=["lowFeH"]),
+    )
+    with pytest.raises(ValueError, match="lowFeH"):
+        run.resolve_run_configuration("derived_run")
+
+
+def test_derived_run_cannot_reuse_another_derived_run(monkeypatch):
+    configurations = _source_and_derived_runs()
+    configurations["second_derived"] = {"reuse_fits_from": "derived_run"}
+    monkeypatch.setattr(run, "RUN_CONFIGURATIONS", configurations)
+    with pytest.raises(ValueError, match="derived run"):
+        run.resolve_run_configuration("second_derived")
+
+
+def _write_source_fits(output_dir, models=("piecewise", "loglinear")):
+    source_dir = output_dir / "mtrue" / "allstars" / "source_run"
+    (source_dir / "saved_chains").mkdir(parents=True)
+    (source_dir / "saved_dicts").mkdir()
+    (source_dir / "saved_dicts" / "fit_data.npz").write_bytes(b"fit")
+    for model_name in models:
+        name = (
+            "chains_piecewise.npz" if model_name == "piecewise"
+            else "chains_{}_bin0.npz".format(model_name)
+        )
+        (source_dir / "saved_chains" / name).write_bytes(b"chain")
+    return source_dir
+
+
+def test_link_reused_fits_uses_relative_links(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS", _source_and_derived_runs()
+    )
+    configuration = run.resolve_run_configuration("derived_run")
+    source_dir = _write_source_fits(tmp_path)
+
+    run._check_reused_fits("derived_run", configuration, tmp_path)
+    run.link_reused_fits("derived_run", configuration, tmp_path)
+    run.link_reused_fits("derived_run", configuration, tmp_path)
+
+    derived_dir = tmp_path / "mtrue" / "allstars" / "derived_run"
+    assert os.readlink(derived_dir / "saved_chains") == (
+        "../source_run/saved_chains"
+    )
+    fit_link = derived_dir / "saved_dicts" / "fit_data.npz"
+    assert os.readlink(fit_link) == "../../source_run/saved_dicts/fit_data.npz"
+    assert fit_link.read_bytes() == b"fit"
+    assert not (derived_dir / "saved_dicts").is_symlink()
+    assert (derived_dir / "saved_chains" / "chains_loglinear_bin0.npz").samefile(
+        source_dir / "saved_chains" / "chains_loglinear_bin0.npz"
+    )
+
+
+def test_link_reused_fits_refuses_existing_folders(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS", _source_and_derived_runs()
+    )
+    configuration = run.resolve_run_configuration("derived_run")
+    _write_source_fits(tmp_path)
+    (tmp_path / "mtrue" / "allstars" / "derived_run" / "saved_chains").mkdir(
+        parents=True
+    )
+    with pytest.raises(FileExistsError, match="not a link"):
+        run.link_reused_fits("derived_run", configuration, tmp_path)
+
+
+def test_check_reused_fits_reports_missing_model_chains(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        run, "RUN_CONFIGURATIONS", _source_and_derived_runs()
+    )
+    configuration = run.resolve_run_configuration("derived_run")
+    _write_source_fits(tmp_path, models=("piecewise",))
+    with pytest.raises(FileNotFoundError, match="chains_loglinear_bin"):
+        run._check_reused_fits("derived_run", configuration, tmp_path)
+
+
+def test_configured_derived_runs_resolve():
+    for name, entry in run.RUN_CONFIGURATIONS.items():
+        if "reuse_fits_from" in entry:
+            run.resolve_run_configuration(name)

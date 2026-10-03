@@ -52,6 +52,16 @@ Tier 2 directories are reused; delete one when its products should be
 regenerated. Tier 3 fits rerun and overwrite existing products whenever
 `run_fits=True`; use `plots_only=True` to reuse saved fits.
 
+## Replotting saved fits
+
+A `RUN_CONFIGURATIONS` entry with `"reuse_fits_from": "<run>"` replots another
+run's fits without refitting, e.g. with a different `plot_models_list`. It
+inherits the source run's edges and fit settings, may set only plot options
+and subsets of the source's `tier1_list`/`tier2_list`, and writes to
+`results/<tier1>/<tier2>/<its own name>/`. That folder's `saved_chains` and
+`saved_dicts/fit_data.npz` are relative links to the source run's files, so the
+source run must be fitted first.
+
 The CLS source tables remain in the sibling `occurrence/cls_files` directory.
 The exact derived catalog used here is cached in
 `data/derived/star_catalog.json` when the workflow is first validated or run.
