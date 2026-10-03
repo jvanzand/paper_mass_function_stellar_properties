@@ -1,4 +1,25 @@
+# Python and OS clutter
 .DS_Store
 __pycache__/
+*.py[cod]
 .pytest_cache/
-results/
+.ipynb_checkpoints/
+
+# Occurrence outputs. run.py writes every product beneath results/.
+/results/
+
+# Stray outputs written outside results/ (e.g. from ad hoc runs at the top level)
+/*.png
+/*.pdf
+/*.npz
+/*.npy
+/*.pkl
+
+# Logs and batch-job output from remote runs
+*.log
+nohup.out
+slurm-*.out
+*.err
+
+# Injection-recovery files copied onto a machine (large, machine-specific inputs)
+/data/cls_recoveries/
