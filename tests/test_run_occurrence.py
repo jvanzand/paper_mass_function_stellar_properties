@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-import run
+import run_occurrence as run
 
 
 def test_catalog_and_active_samples_are_valid():
@@ -46,8 +46,8 @@ def test_mcmc_configuration_keeps_samples_after_burnin():
 
 
 def test_runs_to_do_selects_default_runs(monkeypatch):
-    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar_3params"])
-    assert run._selected_run_names(None) == ["stellar_3params"]
+    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar3params"])
+    assert run._selected_run_names(None) == ["stellar3params"]
 
 
 def test_runs_to_do_none_selects_every_run(monkeypatch):
@@ -56,7 +56,7 @@ def test_runs_to_do_none_selects_every_run(monkeypatch):
 
 
 def test_explicit_run_names_override_runs_to_do(monkeypatch):
-    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar_3params"])
+    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar3params"])
     assert run._selected_run_names(["paper_bounds"]) == ["paper_bounds"]
 
 

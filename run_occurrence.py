@@ -1,5 +1,8 @@
 """Run all occurrence calculations used by this paper.
 
+Post-fit tables, LaTeX variables, and summary plots built from these results
+live in ``run_post_fit_analysis.py``.
+
 Edit ``RUN_CONFIGURATIONS`` for scientific choices and ``RUNS_TO_DO`` to
 choose which of them run, or call :func:`main` from Python to select runs
 and execution behavior. Paths are resolved from
@@ -30,7 +33,6 @@ LOCAL_PATH_KEYS = ("recoveries_dir", "posteriors_dir")
 if str(OCCURRENCE_DIR.parent) not in sys.path:
     sys.path.insert(0, str(OCCURRENCE_DIR.parent))
 
-from occurrence import post_fit_analysis as pfa  # noqa: E402
 from occurrence import run as occurrence_run  # noqa: E402
 from occurrence import sampling_utils as su  # noqa: E402
 
@@ -61,14 +63,31 @@ RUN_CONFIGURATIONS = {
         "make_plots": True,
     },
 
-    # 3params runs for tables
-    "stellar_3params": {
+    # 2params runs for tables
+    "stellar2params": {
+        "tier1_list": ["mtrue"],
+        "tier2_list": ['highMstarhighFeH', 'highMstarlowFeH',
+                       'lowMstarhighFeH', 'lowMstarlowFeH'],
+        "tier3_list": ["stellar2params"],
+        "a_edges": [0.1, 10.0],
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
+
+        "run_fits":True,
+        "make_plots":True,
+    },
+
+    # 3params runs for tables. The name "stellar3params" (and
+    # "stellar2params" above) gives the LaTeX variables the unprefixed command
+    # names the paper uses, e.g. \McLowMstarLowFeHYoungNstars.
+    "stellar3params": {
         "tier1_list": ["mtrue"],
         "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
                       'highMstarlowFeHhighAct', 'highMstarlowFeHlowAct',
                       'lowMstarhighFeHhighAct', 'lowMstarhighFeHlowAct',
                       'lowMstarlowFeHhighAct', 'lowMstarlowFeHlowAct'],
-        "tier3_list": ["stellar_3params"],
+        "tier3_list": ["stellar3params"],
         "a_edges": [0.1, 10.0],
         "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
         "run_models_list": ["piecewise"],
@@ -116,8 +135,8 @@ RUN_CONFIGURATIONS = {
 
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
-# run_names (including ``python run.py``). Set to None to run every entry.
-RUNS_TO_DO = ["stellar_3params", "stellar_3params_Miyazaki", "paper_bounds_loglinear"]
+# run_names (including ``python run_occurrence.py``). Set to None to run every entry.
+RUNS_TO_DO = ["stellar3params", "stellar_3params_Miyazaki", "paper_bounds_loglinear"]
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
@@ -491,14 +510,6 @@ def _print_plan(configurations, star_df, output_dir):
             print("  {}: {} stars".format(sample_name, count))
 
 
-def make_post_fit_products(results_dir=RESULTS_DIR):
-    """Create the currently used two-stellar-parameter summary tables."""
-    return pfa.make_two_parameter_tables(
-        Path(results_dir), t1="mtrue", t3="stellar2params",
-        use_latex_variables=False,
-    )
-
-
 def main(
         run_names=None,
         validate_only=False,
@@ -507,7 +518,6 @@ def main(
         run_fits=None,
         make_plots=None,
         rebuild_star_catalog=False,
-        make_post_fit_tables=False,
         output_dir=RESULTS_DIR,
         recoveries_dir=None,
         comp_post_dir=None):
@@ -598,8 +608,6 @@ def main(
             arguments["run_fits"] = False
         results.extend(occurrence_run.run_multiple(**arguments))
 
-    if make_post_fit_tables:
-        make_post_fit_products(output_dir)
     return results
 
 

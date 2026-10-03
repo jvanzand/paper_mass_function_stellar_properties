@@ -1,0 +1,289 @@
+"""Make the paper's tables, LaTeX variables, and summary plots.
+
+These products are built from the saved results of ``run_occurrence.py``.
+Edit ``POST_FIT_PRODUCTS`` to define a product and ``PRODUCTS_TO_MAKE`` to
+choose which of them run, or call :func:`main` from Python. Outputs are
+written beneath ``results/paper_items/`` (plots go to the matching
+experiment's ``plots`` folder).
+
+Each product names the ``RUN_CONFIGURATIONS`` entry whose results it reads,
+so its Tier 3 folder comes from the run configuration and its Tier 1 and
+Tier 2 choices are checked against that run before anything is made.
+"""
+
+from pathlib import Path
+
+from run_occurrence import RESULTS_DIR, resolve_run_configuration
+
+from occurrence import post_fit_analysis as pfa
+
+
+# Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
+# "run" names the RUN_CONFIGURATIONS entry to read; "three_parameter_run"
+# (make_variables only) names the three-parameter run whose subset statistics
+# are added to the variables file. Every other key is passed through as a
+# keyword argument.
+POST_FIT_PRODUCTS = {
+
+    # LaTeX variables for the main results and three-parameter subsets
+    "variables": {
+        "function": "make_variables",
+        "run": "paper_bounds",
+        "three_parameter_run": "stellar3params",
+        "tier1_dirs": ["mtrue"],
+        "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+        "stack_dim": "a",
+    },
+
+    # Model parameters for the full sample (references variables.tex)
+    "full_sample_parameter_table": {
+        "function": "make_parameter_table",
+        "run": "paper_bounds",
+        "t1": "mtrue",
+        "t2": "allstars",
+        "models": ["logG", "sigmoid"],
+        "caption": "Derived Model Parameters for Full Sample",
+        "stack_bin": 0,
+        "stack_dim": "a",
+    },
+
+    # Model parameters for every sample (references variables.tex)
+    "appendix_parameter_table": {
+        "function": "make_appendix_parameter_table",
+        "run": "paper_bounds",
+        "tier1_dirs": ["mtrue", "qtrue"],
+        "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+    },
+
+    # Mass-metallicity occurrence tables
+    "two_param_tables": {
+        "function": "make_two_parameter_tables",
+        "run": "stellar2params",
+        "t1": "mtrue",
+        "use_latex_variables": False,
+    },
+
+    # Mass-metallicity-age occurrence tables (references variables.tex)
+    "three_param_tables": {
+        "function": "make_three_parameter_tables",
+        "run": "stellar3params",
+        "t1": "mtrue",
+        "occurrence_model": "piecewise",
+    },
+
+    # Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
+    # region. Values are written directly into the tables because only one
+    # three-parameter run can supply LaTeX variables.
+    "three_param_tables_Miyazaki": {
+        "function": "make_three_parameter_tables",
+        "run": "stellar_3params_Miyazaki",
+        "t1": "mtrue",
+        "occurrence_model": "piecewise",
+        "use_latex_variables": False,
+        "reordered_label": "tab:three_param_OR_reordered_Miyazaki",
+        "original_label": "tab:three_param_OR_Miyazaki",
+    },
+
+    # Companions colored by host properties over the average completeness
+    "companion_plots": {
+        "function": "plot_companions_by_stellar_parameter",
+        "run": "paper_bounds",
+        "tier1_dirs": ["mtrue"],
+        "tier2_types": ["allstars"],
+        "stellar_parameters": ["Mstar", "FeH", "Age"],
+    },
+
+}
+
+
+# Names from POST_FIT_PRODUCTS to make when main() is called without
+# product_names (including ``python run_post_fit_analysis.py``). Set to None
+# to make every product.
+PRODUCTS_TO_MAKE = ["two_param_tables"]
+
+
+# How each supported function receives the experiment's Tier 3 folder and,
+# for the subset tables, its Tier 2 folders.
+TIER3_ARGUMENTS = {
+    "make_variables": "tier3_dirs",
+    "make_parameter_table": "t3",
+    "make_appendix_parameter_table": "t3",
+    "make_two_parameter_tables": "t3",
+    "make_three_parameter_tables": "t3",
+    "plot_companions_by_stellar_parameter": "tier3_dirs",
+    "calculate_all_delta_bics": "tier3_dirs",
+}
+TIER2_DIRS_FUNCTIONS = {
+    "make_two_parameter_tables", "make_three_parameter_tables",
+}
+PRODUCT_KEYS = {"function", "run", "three_parameter_run"}
+
+
+def _selected_product_names(product_names):
+    if product_names is None:
+        product_names = PRODUCTS_TO_MAKE
+    names = (
+        list(POST_FIT_PRODUCTS) if product_names is None
+        else list(product_names)
+    )
+    unknown = sorted(set(names) - set(POST_FIT_PRODUCTS))
+    if unknown:
+        raise ValueError("unknown post-fit products: {}".format(unknown))
+    if not names:
+        raise ValueError("product_names must select at least one product")
+    return names
+
+
+def _expand_tier2_types(tier2_types):
+    """Mirror occurrence's expansion of "Mstar" into highMstar and lowMstar."""
+    directories = []
+    for tier2_type in tier2_types:
+        if str(tier2_type).lower() == "allstars":
+            directories.append(str(tier2_type))
+        else:
+            directories.extend(
+                ["high{}".format(tier2_type), "low{}".format(tier2_type)]
+            )
+    return directories
+
+
+def _run_tier3(product_name, run_name):
+    try:
+        configuration = resolve_run_configuration(run_name)
+    except KeyError:
+        raise ValueError("{} reads unknown run {!r}".format(
+            product_name, run_name
+        )) from None
+    if len(configuration["tier3_list"]) != 1:
+        raise ValueError("{} must read a run with one Tier 3 folder".format(
+            product_name
+        ))
+    return configuration, configuration["tier3_list"][0]
+
+
+def _check_subset(product_name, run_name, label, requested, available):
+    extra = [item for item in requested if item not in available]
+    if extra:
+        raise ValueError("{} requests {} not in run {!r}: {}".format(
+            product_name, label, run_name, extra
+        ))
+
+
+def resolve_product(product_name, results_dir=RESULTS_DIR):
+    """Return ``(function_name, arguments, folders_read)`` for a product.
+
+    ``folders_read`` lists the Tier 3 result folders the product reads, so
+    their existence can be checked before anything is made.
+    """
+    spec = dict(POST_FIT_PRODUCTS[product_name])
+    function_name = spec.get("function")
+    if function_name not in TIER3_ARGUMENTS:
+        raise ValueError("{} uses unsupported function {!r}; supported: "
+                         "{}".format(product_name, function_name,
+                                     sorted(TIER3_ARGUMENTS)))
+    if "run" not in spec:
+        raise ValueError("{} must name the run it reads".format(product_name))
+    tier3_argument = TIER3_ARGUMENTS[function_name]
+    reserved = {tier3_argument, "results_dir", "three_parameter_t3"}
+    if function_name in TIER2_DIRS_FUNCTIONS:
+        reserved.add("tier2_dirs")
+    overridden = sorted(reserved & set(spec))
+    if overridden:
+        raise ValueError(
+            "{} sets {}, which come from its run configuration".format(
+                product_name, overridden
+            )
+        )
+
+    run_name = spec["run"]
+    configuration, tier3 = _run_tier3(product_name, run_name)
+    arguments = {
+        key: value for key, value in spec.items() if key not in PRODUCT_KEYS
+    }
+    arguments["results_dir"] = Path(results_dir)
+    arguments[tier3_argument] = (
+        [tier3] if tier3_argument == "tier3_dirs" else tier3
+    )
+
+    tier1_dirs = (
+        [arguments["t1"]] if "t1" in arguments
+        else list(arguments.get("tier1_dirs", ["mtrue"]))
+    )
+    if "t2" in arguments:
+        tier2_dirs = [arguments["t2"]]
+    elif "tier2_types" in arguments:
+        tier2_dirs = _expand_tier2_types(arguments["tier2_types"])
+    else:
+        tier2_dirs = list(configuration["tier2_list"])
+        if function_name in TIER2_DIRS_FUNCTIONS:
+            arguments["tier2_dirs"] = tier2_dirs
+    _check_subset(product_name, run_name, "Tier 1 folders", tier1_dirs,
+                  configuration["tier1_list"])
+    _check_subset(product_name, run_name, "Tier 2 folders", tier2_dirs,
+                  configuration["tier2_list"])
+    folders_read = [
+        Path(results_dir) / tier1 / tier2 / tier3
+        for tier1 in tier1_dirs for tier2 in tier2_dirs
+    ]
+
+    if "three_parameter_run" in spec:
+        if function_name != "make_variables":
+            raise ValueError(
+                "{}: three_parameter_run only applies to make_variables"
+                .format(product_name)
+            )
+        three_run = spec["three_parameter_run"]
+        three_configuration, three_tier3 = _run_tier3(product_name, three_run)
+        arguments["three_parameter_t3"] = three_tier3
+        folders_read.extend(
+            Path(results_dir) / tier1 / tier2 / three_tier3
+            for tier1 in tier1_dirs if tier1 in three_configuration["tier1_list"]
+            for tier2 in three_configuration["tier2_list"]
+        )
+    elif function_name == "make_variables":
+        # Without this, occurrence would look for a "stellar3params" folder
+        # that this product did not ask for.
+        arguments["three_parameter_t3"] = None
+    return function_name, arguments, folders_read
+
+
+def _check_folders_exist(product_name, folders_read):
+    missing = [str(folder) for folder in folders_read if not folder.is_dir()]
+    if missing:
+        raise FileNotFoundError(
+            "{} reads results that do not exist yet; run them with "
+            "run_occurrence.py first. Missing: {}".format(product_name, missing)
+        )
+
+
+def main(product_names=None, results_dir=RESULTS_DIR, dry_run=False):
+    """Validate and make the selected post-fit products.
+
+    ``product_names`` selects keys from ``POST_FIT_PRODUCTS``; when omitted,
+    ``PRODUCTS_TO_MAKE`` is used, and ``None`` there means every product.
+    Every selected product is checked, including that its results exist,
+    before any is made. ``dry_run`` stops after those checks.
+    """
+    names = _selected_product_names(product_names)
+    resolved = {
+        name: resolve_product(name, results_dir) for name in names
+    }
+    for name, (_, _, folders_read) in resolved.items():
+        _check_folders_exist(name, folders_read)
+
+    print("Results: {}".format(results_dir))
+    for name, (function_name, arguments, folders_read) in resolved.items():
+        print("{}: {} from {} result folders".format(
+            name, function_name, len(folders_read)
+        ))
+    if dry_run:
+        return {}
+
+    outputs = {}
+    for name, (function_name, arguments, _) in resolved.items():
+        outputs[name] = getattr(pfa, function_name)(**arguments)
+    return outputs
+
+
+if __name__ == "__main__":
+    print(main())

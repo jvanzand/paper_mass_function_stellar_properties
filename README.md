@@ -1,7 +1,7 @@
 # Stellar-properties mass-function workflow
 
-`run.py` is the single editable entry point for the paper's occurrence
-calculations. It builds or loads the CLS stellar catalog, validates the named
+`run_occurrence.py` is the single editable entry point for the paper's
+occurrence calculations. It builds or loads the CLS stellar catalog, validates the named
 stellar subsamples, and calls `occurrence.run.run_multiple()` once for each
 selected entry in `RUN_CONFIGURATIONS`. `RUNS_TO_DO` lists the entries to run
 by default; set it to `None` to run all of them, or pass `run_names` to
@@ -24,7 +24,7 @@ cp local_paths.example.json local_paths.json
 }
 ```
 
-`run.py` stops with an explanatory error if the file or either entry is
+`run_occurrence.py` stops with an explanatory error if the file or either entry is
 missing.
 
 ## Running
@@ -32,13 +32,13 @@ missing.
 The default executable behavior is:
 
 ```bash
-python run.py
+python run_occurrence.py
 ```
 
 For interactive use, import `main` and choose behavior with function arguments:
 
 ```python
-from run import main
+from run_occurrence import main
 
 main(validate_only=True)
 main(dry_run=True, run_names=["paper_bounds"])
@@ -46,11 +46,33 @@ main(plots_only=True)
 main(rebuild_star_catalog=True)
 ```
 
-Scientific binning and sample choices live near the top of `run.py` and in
+Scientific binning and sample choices live near the top of
+`run_occurrence.py` and in
 `config_dict.py`. Results are written beneath `results/`. Existing Tier 1 and
 Tier 2 directories are reused; delete one when its products should be
 regenerated. Tier 3 fits rerun and overwrite existing products whenever
 `run_fits=True`; use `plots_only=True` to reuse saved fits.
+
+## Tables, variables, and summary plots
+
+`run_post_fit_analysis.py` builds the paper's LaTeX variables, tables, and
+companion plots from saved results. Each entry in `POST_FIT_PRODUCTS` names the
+`RUN_CONFIGURATIONS` entry it reads, so its Tier 3 folder comes from that run
+and its Tier 1 and Tier 2 choices are checked against it. `PRODUCTS_TO_MAKE`
+selects the products to build by default:
+
+```bash
+python run_post_fit_analysis.py
+```
+
+Products stop with a message naming the missing result folders if their runs
+have not been completed. Outputs go to `results/paper_items/`; plots go to the
+matching experiment's `plots` folder. It needs only `results/`, not the
+recoveries or posteriors, so it can run on any machine holding the results.
+
+The three-parameter and two-parameter runs are named `stellar3params` and
+`stellar2params` because occurrence gives exactly those names the unprefixed
+LaTeX commands the paper uses (e.g. `\McLowMstarLowFeHYoungNstars`).
 
 ## Replotting saved fits
 
