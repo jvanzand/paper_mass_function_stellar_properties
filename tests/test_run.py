@@ -2,15 +2,18 @@
 
 import json
 
+import pytest
+
 import run
 
 
 def test_catalog_and_active_samples_are_valid():
     star_df = run.make_star_df()
+    active_run = next(iter(run.RUN_CONFIGURATIONS.values()))
 
     run.validate_star_df(
         star_df,
-        run.RUN_CONFIGURATIONS["stellar2params"]["tier2_list"],
+        active_run["tier2_list"],
     )
     assert len(star_df) == 719
 
@@ -39,3 +42,24 @@ def test_validate_only_does_not_call_occurrence_runner(monkeypatch):
 
 def test_mcmc_configuration_keeps_samples_after_burnin():
     assert run.RUN_DEFAULTS["nsteps"] > run.RUN_DEFAULTS["burnin"]
+
+
+def test_runs_to_do_selects_default_runs(monkeypatch):
+    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar_3params"])
+    assert run._selected_run_names(None) == ["stellar_3params"]
+
+
+def test_runs_to_do_none_selects_every_run(monkeypatch):
+    monkeypatch.setattr(run, "RUNS_TO_DO", None)
+    assert run._selected_run_names(None) == list(run.RUN_CONFIGURATIONS)
+
+
+def test_explicit_run_names_override_runs_to_do(monkeypatch):
+    monkeypatch.setattr(run, "RUNS_TO_DO", ["stellar_3params"])
+    assert run._selected_run_names(["paper_bounds"]) == ["paper_bounds"]
+
+
+def test_runs_to_do_rejects_unknown_names(monkeypatch):
+    monkeypatch.setattr(run, "RUNS_TO_DO", ["not_a_run"])
+    with pytest.raises(ValueError, match="unknown runs"):
+        run._selected_run_names(None)

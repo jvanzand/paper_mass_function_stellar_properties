@@ -1,7 +1,8 @@
 """Run all occurrence calculations used by this paper.
 
-Edit ``RUN_CONFIGURATIONS`` for scientific choices, or call :func:`main`
-from Python to select runs and execution behavior. Paths are resolved from
+Edit ``RUN_CONFIGURATIONS`` for scientific choices and ``RUNS_TO_DO`` to
+choose which of them run, or call :func:`main` from Python to select runs
+and execution behavior. Paths are resolved from
 this file, so launching it from another working directory is safe.
 """
 
@@ -17,9 +18,8 @@ PROJECT_DIR = Path(__file__).resolve().parent
 OCCURRENCE_DIR = PROJECT_DIR.parent / "occurrence"
 RESULTS_DIR = PROJECT_DIR / "results"
 STAR_CATALOG = PROJECT_DIR / "data" / "derived" / "star_catalog.json"
-RECOVERIES_DIR = Path(
-    "/Users/judahvz/research/code/my_papers/bd_desert/cls_recoveries"
-)
+RECOVERIES_DIR = Path("/Users/judahvz/research/code/my_papers/bd_desert/cls_recoveries")
+
 POSTERIORS_DIR = PROJECT_DIR / "resampled_posteriors_1ksamples"
 
 # occurrence is currently a sibling checkout rather than an installed package.
@@ -36,26 +36,57 @@ from config_dict import tier2_df_cuts_dict  # noqa: E402
 # Each entry becomes one call to occurrence.run.run_multiple(). Keep separate
 # experiments here instead of copying or commenting out call blocks.
 RUN_CONFIGURATIONS = {
-    "stellar2params": {
-        "tier1_list": ["mtrue"],
+
+    "paper_bounds": {
+        "tier1_list": ["mtrue", "qtrue"],
         "tier2_list": [
-            "highMstarhighFeH",
-            "highMstarlowFeH",
-            "lowMstarhighFeH",
-            "lowMstarlowFeH",
+            "allstars", "highMstar", "lowMstar", "highFeH", "lowFeH",
+            "highAct", "lowAct",
         ],
-        "tier3_list": ["stellar2params"],
+        "tier3_list": ["paper_bounds"],
         "a_edges": [0.1, 10.0],
         "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
         "model_fit_bounds": {
             "loglinear": {"a": (0.1, 10.0), "m": (2.26, 13.0)},
         },
+        "run_models_list": ["piecewise", "sigmoid", "logG", "loglinear"],
+        "plot_models_list": ["piecewise", "sigmoid", "logG"],
+
+        "run_fits": True,
+        "make_plots": True,
     },
+
+    "stellar_3params": {
+        "tier1_list": ["mtrue"],
+        "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
+                      'highMstarlowFeHhighAct', 'highMstarlowFeHlowAct',
+                      'lowMstarhighFeHhighAct', 'lowMstarhighFeHlowAct',
+                      'lowMstarlowFeHhighAct', 'lowMstarlowFeHlowAct'],
+        "tier3_list": ["stellar_3params"],
+        "a_edges": [0.1, 10.0],
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
+
+        "run_fits":True,
+        "make_plots":True,
+    },
+
 }
+
+
+# Names from RUN_CONFIGURATIONS to execute when main() is called without
+# run_names (including ``python run.py``). Set to None to run every entry.
+RUNS_TO_DO = ["stellar_3params"]
 
 
 RUN_DEFAULTS = {
     "recoveries_mtype": "msini",
+    "run_fits": True,
+    "make_plots": True,
+    "prepare_missing": True,
+    "avg_map_only": False,
+    "fill_single_nan_with_average": True,
     "run_models_list": ["piecewise"],
     "plot_models_list": ["piecewise"],
     "model_plot_style": "credible",
@@ -69,21 +100,33 @@ RUN_DEFAULTS = {
     "plot_corner": True,
     "plot_catalog_roi": True,
     "plot_roi_occurrence": True,
-    "plot_uncorrected_occurrence_mle": False,
-    "occurrence_legend_loc": "upper left",
+    "plot_uncorrected_occurrence_mle": True,
+    "occurrence_legend_loc": "upper right",
     "completeness_type": "single",
     "plot_tier1_maps": False,
     "integration_resolution": (100, 100),
     "use_average_completeness": True,
-    "piecewise_parameterization": "independent",
+    "piecewise_parameterization": "gp",
+    "piecewise_gp_amplitude": 1.0,
+    "piecewise_gp_length_scale_a": None,
+    "piecewise_gp_length_scale_m": None,
+    "piecewise_gp_jitter": 1e-8,
     "piecewise_gp_infer_hyperparameters": True,
     "piecewise_gp_amplitude_bounds": (0.05, 5.0),
     "piecewise_gp_length_scale_a_bounds": None,
     "piecewise_gp_length_scale_m_bounds": None,
     "max_integrated_occurrence": 1.0,
+    "logg_amplitude_bounds": (1e-6, 10.0),
+    "logg_sigma_bounds": None,
+    "escarpment_amplitude_bounds": (1e-6, 10.0),
+    "sigmoid_amplitude_bounds": (1e-6, 10.0),
+    "sigmoid_width_bounds": None,
+    "bpl_amplitude_bounds": (1e-6, 10.0),
+    "bpl_slope_bounds": (-4.0, 4.0),
+    "loglinear_amplitude_bounds": (1e-6, 10.0),
     "nwalkers": 50,
-    "nsteps": 5000,
-    "burnin": 2000,
+    "nsteps": 500,
+    "burnin": 200,
     "random_seed": 1234,
     "parallel_fits": True,
     "parallel_mcmc": False,
@@ -217,6 +260,8 @@ def load_or_make_star_df(cache_path=STAR_CATALOG, rebuild=False):
 
 
 def _selected_run_names(run_names):
+    if run_names is None:
+        run_names = RUNS_TO_DO
     names = list(RUN_CONFIGURATIONS) if run_names is None else list(run_names)
     unknown = sorted(set(names) - set(RUN_CONFIGURATIONS))
     if unknown:
@@ -263,6 +308,8 @@ def main(
         validate_only=False,
         dry_run=False,
         plots_only=False,
+        run_fits=None,
+        make_plots=None,
         rebuild_star_catalog=False,
         make_post_fit_tables=False,
         output_dir=RESULTS_DIR,
@@ -270,10 +317,14 @@ def main(
         comp_post_dir=POSTERIORS_DIR):
     """Validate and execute the selected paper calculations.
 
-    ``run_names`` selects keys from ``RUN_CONFIGURATIONS``. ``plots_only``
-    reuses saved chains instead of fitting. ``dry_run`` reports expanded
-    sample sizes and paths without creating results. ``validate_only`` also
-    verifies required input directories, then stops.
+    ``run_names`` selects keys from ``RUN_CONFIGURATIONS``; when omitted,
+    ``RUNS_TO_DO`` is used, and ``None`` there means every run. ``plots_only``
+    reuses saved chains instead of fitting. ``run_fits=True`` always reruns
+    the Tier 3 fits and overwrites their saved products. Set
+    ``make_plots=False`` to skip plots.
+    ``dry_run`` reports expanded sample sizes and paths without creating
+    results. ``validate_only`` also verifies required input directories, then
+    stops.
     """
     names = _selected_run_names(run_names)
     for name in names:
@@ -303,6 +354,9 @@ def main(
     if validate_only or dry_run:
         return []
 
+    if plots_only and run_fits is True:
+        raise ValueError("plots_only=True conflicts with run_fits=True")
+
     results = []
     for name in names:
         arguments = dict(RUN_DEFAULTS)
@@ -314,9 +368,14 @@ def main(
             "recoveries_dir": recoveries_dir,
             "comp_post_dir": comp_post_dir,
             "sampling_func": su.post_sampler2,
-            "run_fits": not plots_only,
-            "make_plots": True,
         })
+        if plots_only:
+            arguments["run_fits"] = False
+            arguments["make_plots"] = True
+        if run_fits is not None:
+            arguments["run_fits"] = run_fits
+        if make_plots is not None:
+            arguments["make_plots"] = make_plots
         results.extend(occurrence_run.run_multiple(**arguments))
 
     if make_post_fit_tables:
