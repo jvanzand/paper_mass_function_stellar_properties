@@ -63,7 +63,7 @@ RUN_CONFIGURATIONS = {
         "make_plots": True,
     },
 
-    # 2params runs for tables
+    # Optional: 2params runs for tables
     "stellar2params": {
         "tier1_list": ["mtrue"],
         "tier2_list": ['highMstarhighFeH', 'highMstarlowFeH',
@@ -95,7 +95,7 @@ RUN_CONFIGURATIONS = {
         "make_plots":True,
     },
     
-    # 3params runs for Miyazaki comparison
+    # Discussion: 3params runs for Miyazaki comparison
     "stellar_3params_Miyazaki": {
         "tier1_list": ["mtrue"],
         "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
@@ -112,7 +112,7 @@ RUN_CONFIGURATIONS = {
         "make_plots":True,
     },
 
-    # Loglinear fit to Mtrue allstars
+    # Discussion: Loglinear fit to Mtrue allstars
     "paper_bounds_loglinear": {
         "reuse_fits_from": "paper_bounds",
         "tier1_list": ["mtrue"],
@@ -127,6 +127,23 @@ RUN_CONFIGURATIONS = {
         "plot_catalog_roi": False,
         "plot_roi_occurrence": False,
         "plot_uncorrected_occurrence_mle": True,
+    },
+
+    # Discussion: BD desert with no GP smoothing
+    "paper_bounds": {
+        "tier1_list": ["mtrue", "qtrue"],
+        "tier2_list": [
+            "allstars",
+        ],
+        "tier3_list": ["paper_bounds"],
+        "a_edges": [0.1, 10.0],
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "run_models_list": ["piecewise", "escarpment"],
+        "plot_models_list": ["piecewise", "escarpment"],
+
+        "piecewise_parameterization": "independent",
+        "run_fits": False,
+        "make_plots": True,
     },
 
 }
