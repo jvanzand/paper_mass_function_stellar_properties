@@ -19,17 +19,19 @@ from occurrence import post_fit_analysis as pfa
 
 
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
-# "run" names the RUN_CONFIGURATIONS entry to read; "three_parameter_run"
-# (make_variables only) names the three-parameter run whose subset statistics
-# are added to the variables file. Every other key is passed through as a
-# keyword argument.
+# "run" names the RUN_CONFIGURATIONS entry to read; "three_parameter_runs"
+# (make_variables only) lists the three-parameter runs whose subset statistics
+# are added to the variables file. Commands from "stellar3params" are
+# unprefixed (e.g. \McLowMstarLowFeHYoungNstars); every other run's name is
+# spelled into its commands (e.g. \McStellarThreeParamsMiyazakiLowMstar...).
+# Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 
     # LaTeX variables for the main results and three-parameter subsets
     "variables": {
         "function": "make_variables",
         "run": "paper_bounds",
-        "three_parameter_run": "stellar3params",
+        "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
         "tier1_dirs": ["mtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
         "stack_dim": "a",
@@ -72,14 +74,12 @@ POST_FIT_PRODUCTS = {
     },
 
     # Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
-    # region. Values are written directly into the tables because only one
-    # three-parameter run can supply LaTeX variables.
+    # region (references variables.tex)
     "three_param_tables_Miyazaki": {
         "function": "make_three_parameter_tables",
         "run": "stellar_3params_Miyazaki",
         "t1": "mtrue",
         "occurrence_model": "piecewise",
-        "use_latex_variables": False,
         "reordered_label": "tab:three_param_OR_reordered_Miyazaki",
         "original_label": "tab:three_param_OR_Miyazaki",
     },
@@ -116,7 +116,7 @@ TIER3_ARGUMENTS = {
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
-PRODUCT_KEYS = {"function", "run", "three_parameter_run"}
+PRODUCT_KEYS = {"function", "run", "three_parameter_runs"}
 
 
 def _selected_product_names(product_names):
@@ -226,24 +226,27 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
         for tier1 in tier1_dirs for tier2 in tier2_dirs
     ]
 
-    if "three_parameter_run" in spec:
-        if function_name != "make_variables":
-            raise ValueError(
-                "{}: three_parameter_run only applies to make_variables"
-                .format(product_name)
+    if "three_parameter_runs" in spec and function_name != "make_variables":
+        raise ValueError(
+            "{}: three_parameter_runs only applies to make_variables".format(
+                product_name
             )
-        three_run = spec["three_parameter_run"]
-        three_configuration, three_tier3 = _run_tier3(product_name, three_run)
-        arguments["three_parameter_t3"] = three_tier3
-        folders_read.extend(
-            Path(results_dir) / tier1 / tier2 / three_tier3
-            for tier1 in tier1_dirs if tier1 in three_configuration["tier1_list"]
-            for tier2 in three_configuration["tier2_list"]
         )
-    elif function_name == "make_variables":
-        # Without this, occurrence would look for a "stellar3params" folder
-        # that this product did not ask for.
-        arguments["three_parameter_t3"] = None
+    if function_name == "make_variables":
+        # An empty list keeps occurrence from looking for a "stellar3params"
+        # folder that this product did not ask for.
+        arguments["three_parameter_t3"] = []
+        for three_run in spec.get("three_parameter_runs", []):
+            three_configuration, three_tier3 = _run_tier3(
+                product_name, three_run
+            )
+            arguments["three_parameter_t3"].append(three_tier3)
+            folders_read.extend(
+                Path(results_dir) / tier1 / tier2 / three_tier3
+                for tier1 in tier1_dirs
+                if tier1 in three_configuration["tier1_list"]
+                for tier2 in three_configuration["tier2_list"]
+            )
     return function_name, arguments, folders_read
 
 
