@@ -70,9 +70,10 @@ have not been completed. Outputs go to `results/paper_items/`; plots go to the
 matching experiment's `plots` folder. It needs only `results/`, not the
 recoveries or posteriors, so it can run on any machine holding the results.
 
-The three-parameter and two-parameter runs are named `stellar3params` and
-`stellar2params` because occurrence gives exactly those names the unprefixed
-LaTeX commands the paper uses (e.g. `\McLowMstarLowFeHYoungNstars`).
+Subset LaTeX commands carry their run's name with digits spelled out, so
+`stellar3params` gives `\McStellarThreeParamsLowMstarLowFeHYoungNstars` and
+`stellar_3params_Miyazaki` gives
+`\McStellarThreeParamsMiyazakiLowMstarLowFeHYoungNstars`.
 
 ## Replotting saved fits
 

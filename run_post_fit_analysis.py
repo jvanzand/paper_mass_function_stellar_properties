@@ -21,9 +21,10 @@ from occurrence import post_fit_analysis as pfa
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
 # "run" names the RUN_CONFIGURATIONS entry to read; "three_parameter_runs"
 # (make_variables only) lists the three-parameter runs whose subset statistics
-# are added to the variables file. Commands from "stellar3params" are
-# unprefixed (e.g. \McLowMstarLowFeHYoungNstars); every other run's name is
-# spelled into its commands (e.g. \McStellarThreeParamsMiyazakiLowMstar...).
+# are added to the variables file. Each run's name is spelled into its
+# commands: \McStellarThreeParamsLowMstarLowFeHYoungNstars for
+# "stellar3params", \McStellarThreeParamsMiyazakiLowMstar... for the
+# Miyazaki run.
 # Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 

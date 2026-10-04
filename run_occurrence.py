@@ -78,9 +78,7 @@ RUN_CONFIGURATIONS = {
         "make_plots":True,
     },
 
-    # 3params runs for tables. The name "stellar3params" (and
-    # "stellar2params" above) gives the LaTeX variables the unprefixed command
-    # names the paper uses, e.g. \McLowMstarLowFeHYoungNstars.
+    # 3params runs for tables
     "stellar3params": {
         "tier1_list": ["mtrue"],
         "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
