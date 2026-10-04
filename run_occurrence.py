@@ -130,7 +130,7 @@ RUN_CONFIGURATIONS = {
     },
 
     # Discussion: BD desert with no GP smoothing
-    "paper_bounds": {
+    "paper_bounds_noGP": {
         "tier1_list": ["mtrue", "qtrue"],
         "tier2_list": [
             "allstars",
@@ -628,3 +628,11 @@ def main(
 
 if __name__ == "__main__":
     print(main(run_names=RUNS_TO_DO))
+    
+    
+    
+    
+    
+    
+    
+    
