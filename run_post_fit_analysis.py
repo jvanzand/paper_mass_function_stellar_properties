@@ -3,8 +3,9 @@
 These products are built from the saved results of ``run_occurrence.py``.
 Edit ``POST_FIT_PRODUCTS`` to define a product and ``PRODUCTS_TO_MAKE`` to
 choose which of them run, or call :func:`main` from Python. Outputs are
-written beneath ``results/paper_items/`` (plots go to the matching
-experiment's ``plots`` folder).
+written beneath ``results/paper_tables/`` (plots go to the matching
+experiment's ``plots`` folder); ``collect_paper_items.py`` gathers the ones
+the paper uses.
 
 Each product names the ``RUN_CONFIGURATIONS`` entry whose results it reads,
 so its Tier 3 folder comes from the run configuration and its Tier 1 and

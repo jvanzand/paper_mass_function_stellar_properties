@@ -66,7 +66,7 @@ python run_post_fit_analysis.py
 ```
 
 Products stop with a message naming the missing result folders if their runs
-have not been completed. Outputs go to `results/paper_items/`; plots go to the
+have not been completed. Outputs go to `results/paper_tables/`; plots go to the
 matching experiment's `plots` folder. It needs only `results/`, not the
 recoveries or posteriors, so it can run on any machine holding the results.
 
@@ -74,6 +74,23 @@ Subset LaTeX commands carry their run's name with digits spelled out, so
 `stellar3params` gives `\McStellarThreeParamsLowMstarLowFeHYoungNstars` and
 `stellar_3params_Miyazaki` gives
 `\McStellarThreeParamsMiyazakiLowMstarLowFeHYoungNstars`.
+
+## Collecting items for the paper
+
+`collect_paper_items.py` rebuilds `paper_items/` with every figure, table, and
+`variables.tex` the paper uses, laid out like the LaTeX project (tables at the
+top level, figures in `Figures/`):
+
+```bash
+python collect_paper_items.py
+```
+
+Copy that folder from the remote machine and merge it over the LaTeX project,
+e.g. `rsync -a paper_items/ /path/to/latex_project/`. Figures are named
+`<plot>_<tier1>_<tier2>_<run>.png` (e.g. `ORD_mtrue_highFeH_paper_bounds.png`);
+`PAPER_FIGURES` and `PAPER_TABLES` list what is collected. Every source must
+exist before anything is copied, and the folder is emptied first so it holds
+only current items.
 
 ## Replotting saved fits
 

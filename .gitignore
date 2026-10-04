@@ -5,8 +5,10 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
-# Occurrence outputs. run.py writes every product beneath results/.
+# Occurrence outputs. run_occurrence.py writes every product beneath results/,
+# and collect_paper_items.py gathers the paper's copies into paper_items/.
 /results/
+/paper_items/
 
 # Stray outputs written outside results/ (e.g. from ad hoc runs at the top level)
 /*.png
