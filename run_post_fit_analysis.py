@@ -105,17 +105,38 @@ POST_FIT_PRODUCTS = {
         # Optional settings (defaults shown):
         "orientation": "horizontal",  # or "vertical"
         "title": "{model} CDF",       # every panel; {model} -> model name
-        "credible": 0.68,             # shaded central posterior interval
-        "stack_bin": 0,               # fitted stack bin (a curve may override)
-        "n_grid": 500,                # mass grid points across the bounds
         "max_samples": 2000,          # posterior samples used per curve
         "xlabel": None,               # None: companion mass or mass ratio
         "ylabel": "Cumulative fraction",
         "legend_loc": "lower right",  # legend is drawn in the first panel
         "panel_size": (6, 4),         # inches per panel
         "colors": None,               # None: matplotlib C0, C1, ...
-        "band_alpha": 0.25,
-        "dpi": 300,
+    },
+    
+    # Discussion: normalized CDFs of the high- and low-metallicity fits, one panel
+    # per model, saved to results/cdf_comparisons/<product name>.png
+    "cdf_FeH": {
+        "function": "plot_model_cdf_comparison",
+        "models": ["sigmoid", "logG"],
+        "curves": [
+            {"label": r"[Fe/H]>0", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "highFeH"},
+            {"label": r"[Fe/H] $\leq$ 0", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "lowFeH"},
+        ],
+    },
+    
+    # Discussion: normalized CDFs of the high- and low-metallicity fits, one panel
+    # per model, saved to results/cdf_comparisons/<product name>.png
+    "cdf_Age": {
+        "function": "plot_model_cdf_comparison",
+        "models": ["sigmoid", "logG"],
+        "curves": [
+            {"label": r"Age>5", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "lowAct"},
+            {"label": r"Age $\leq$ 5", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "highAct"},
+        ],
     },
 
 #    # Optional: Mass-metallicity occurrence tables
@@ -133,7 +154,7 @@ POST_FIT_PRODUCTS = {
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
 #PRODUCTS_TO_MAKE = ["variables"]
-PRODUCTS_TO_MAKE = None
+PRODUCTS_TO_MAKE = ["cdf_Mstar", "cdf_FeH", "cdf_Age"]
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
