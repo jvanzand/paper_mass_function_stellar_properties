@@ -109,9 +109,12 @@ POST_FIT_PRODUCTS = {
         "stack_bin": 0,               # fitted stack bin
         "n_grid": 500,                # mass grid points across the bounds
         "max_samples": 2000,          # posterior samples used per curve
+        "xticks": None,               # None: the run's piecewise bin edges,
+                                      # as on the ORD plots; or a list
         "xlabel": None,               # None: companion mass or mass ratio
         "ylabel": "Cumulative fraction",
         "legend_loc": "lower right",  # legend in each row's first panel
+        "legend_fontsize": None,      # None: the ORD plots' legend size
         "panel_size": (5, 3.5),       # inches per panel
         "colors": None,               # None: C0 for high, C1 for low
         "band_alpha": 0.25,
