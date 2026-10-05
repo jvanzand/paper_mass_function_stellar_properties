@@ -34,12 +34,12 @@ POST_FIT_PRODUCTS = {
         "function": "make_variables",
         "run": "paper_bounds",
         "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
-        "tier1_dirs": ["mtrue"],
+        "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
         "stack_dim": "a",
     },
 
-    # Model parameters for the full sample (references variables.tex)
+    # Main text: Model parameters for the full sample (references variables.tex)
     "full_sample_parameter_table": {
         "function": "make_parameter_table",
         "run": "paper_bounds",
@@ -50,43 +50,16 @@ POST_FIT_PRODUCTS = {
         "stack_bin": 0,
         "stack_dim": "a",
     },
-
-    # Model parameters for every sample (references variables.tex)
-    "appendix_parameter_table": {
-        "function": "make_appendix_parameter_table",
-        "run": "paper_bounds",
-        "tier1_dirs": ["mtrue", "qtrue"],
-        "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
-    },
-
-    # Mass-metallicity occurrence tables
-    "two_param_tables": {
-        "function": "make_two_parameter_tables",
-        "run": "stellar2params",
-        "t1": "mtrue",
-        "use_latex_variables": False,
-    },
-
-    # Mass-metallicity-age occurrence tables (references variables.tex)
+    
+    # Main text: Mass-metallicity-age occurrence tables (references variables.tex)
     "three_param_tables": {
         "function": "make_three_parameter_tables",
         "run": "stellar3params",
         "t1": "mtrue",
         "occurrence_model": "piecewise",
     },
-
-    # Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
-    # region (references variables.tex)
-    "three_param_tables_Miyazaki": {
-        "function": "make_three_parameter_tables",
-        "run": "stellar_3params_Miyazaki",
-        "t1": "mtrue",
-        "occurrence_model": "piecewise",
-        "reordered_label": "tab:three_param_OR_reordered_Miyazaki",
-        "original_label": "tab:three_param_OR_Miyazaki",
-    },
-
-    # Companions colored by host properties over the average completeness
+    
+    # Main text: Companions colored by host properties over the average completeness
     "companion_plots": {
         "function": "plot_companions_by_stellar_parameter",
         "run": "paper_bounds",
@@ -95,13 +68,41 @@ POST_FIT_PRODUCTS = {
         "stellar_parameters": ["Mstar", "FeH", "Age"],
     },
 
+    # Appendix: Model parameters for every sample (references variables.tex)
+    "appendix_parameter_table": {
+        "function": "make_appendix_parameter_table",
+        "run": "paper_bounds",
+        "tier1_dirs": ["mtrue", "qtrue"],
+        "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+    },
+
+    # Discussion: Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
+    #             region (references variables.tex)
+    "three_param_tables_Miyazaki": {
+        "function": "make_three_parameter_tables",
+        "run": "stellar_3params_Miyazaki",
+        "t1": "mtrue",
+        "occurrence_model": "piecewise",
+        "reordered_label": "tab:three_param_OR_reordered_Miyazaki",
+        "original_label": "tab:three_param_OR_Miyazaki",
+    },
+    
+#    # Optional: Mass-metallicity occurrence tables
+#   "two_param_tables": {
+#        "function": "make_two_parameter_tables",
+#        "run": "stellar2params",
+#        "t1": "mtrue",
+#        "use_latex_variables": False,
+ #   },
+
 }
 
 
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-PRODUCTS_TO_MAKE = ["variables"]
+#PRODUCTS_TO_MAKE = ["variables"]
+PRODUCTS_TO_MAKE = None
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
