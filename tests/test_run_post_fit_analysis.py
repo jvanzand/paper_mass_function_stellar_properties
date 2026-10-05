@@ -182,11 +182,12 @@ def test_variables_use_runs_and_tables_use_run(tmp_path, monkeypatch):
 def _cdf_product(**overrides):
     product = {
         "function": "plot_model_cdf_comparison",
+        "models": ["sigmoid", "logG"],
         "curves": [
             {"label": "high", "run": "paper_bounds", "tier1": "mtrue",
-             "tier2": "highMstar", "model": "sigmoid"},
+             "tier2": "highMstar"},
             {"label": "low", "run": "paper_bounds", "tier1": "mtrue",
-             "tier2": "lowMstar", "model": "sigmoid", "stack_bin": 1},
+             "tier2": "lowMstar", "stack_bin": 1},
         ],
         "credible": 0.95,
     }
@@ -203,9 +204,10 @@ def test_cdf_curves_take_tier3_folders_from_their_runs(tmp_path, monkeypatch):
     assert function_name == "plot_model_cdf_comparison"
     assert arguments["name"] == "cdf"
     assert arguments["credible"] == 0.95
+    assert arguments["models"] == ["sigmoid", "logG"]
     assert arguments["curves"][0] == {
         "label": "high", "t1": "mtrue", "t2": "highMstar",
-        "t3": "paper_bounds", "model": "sigmoid",
+        "t3": "paper_bounds",
     }
     assert arguments["curves"][1]["stack_bin"] == 1
     assert folders == [tmp_path / "mtrue" / "highMstar" / "paper_bounds",
@@ -232,4 +234,20 @@ def test_cdf_products_name_their_figure_after_the_product(tmp_path,
                                                           monkeypatch):
     _use_products(monkeypatch, cdf=_cdf_product(name="other"))
     with pytest.raises(ValueError, match="product name"):
+        post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_cdf_products_need_models(tmp_path, monkeypatch):
+    product = _cdf_product()
+    del product["models"]
+    _use_products(monkeypatch, cdf=product)
+    with pytest.raises(ValueError, match="models and curves"):
+        post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_cdf_curves_no_longer_name_a_model(tmp_path, monkeypatch):
+    product = _cdf_product()
+    product["curves"][0]["model"] = "sigmoid"
+    _use_products(monkeypatch, cdf=product)
+    with pytest.raises(ValueError, match="model"):
         post_fit.resolve_product("cdf", tmp_path)

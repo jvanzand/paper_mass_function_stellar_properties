@@ -26,8 +26,9 @@ from occurrence import post_fit_analysis as pfa
 # are added to the variables file. Command names spell out the full results
 # path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
 # \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
-# plot_model_cdf_comparison products instead list "curves", each naming its own
-# run, tier1, tier2, and model; the product name becomes the figure name.
+# plot_model_cdf_comparison products instead list "models" (one panel each) and
+# "curves", each naming its own run, tier1, and tier2; the product name becomes
+# the figure name.
 # Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 
@@ -90,51 +91,29 @@ POST_FIT_PRODUCTS = {
         "original_label": "tab:three_param_OR_Miyazaki",
     },
     
-    # Discussion: normalized CDFs of the high- and low-mass sigmoid fits,
-    # saved to results/cdf_comparisons/<product name>.png
-    "cdf_sigmoid_Mstar": {
+    # Discussion: normalized CDFs of the high- and low-mass fits, one panel
+    # per model, saved to results/cdf_comparisons/<product name>.png
+    "cdf_Mstar": {
         "function": "plot_model_cdf_comparison",
+        "models": ["sigmoid", "logG"],
         "curves": [
             {"label": r"$M_\star > 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "highMstar", "model": "sigmoid"},
+             "tier1": "mtrue", "tier2": "highMstar"},
             {"label": r"$M_\star \leq 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "lowMstar", "model": "sigmoid"},
+             "tier1": "mtrue", "tier2": "lowMstar"},
         ],
         # Optional settings (defaults shown):
-        "credible": 0.68,          # shaded central posterior interval
-        "stack_bin": 0,            # fitted stack bin (a curve may override)
-        "n_grid": 500,             # mass grid points across the model bounds
-        "max_samples": 2000,       # posterior samples used per curve
-        "title": None,             # None: "<Model> CDF" when models match
-        "xlabel": None,            # None: companion mass or mass ratio
+        "orientation": "horizontal",  # or "vertical"
+        "title": "{model} CDF",       # every panel; {model} -> model name
+        "credible": 0.68,             # shaded central posterior interval
+        "stack_bin": 0,               # fitted stack bin (a curve may override)
+        "n_grid": 500,                # mass grid points across the bounds
+        "max_samples": 2000,          # posterior samples used per curve
+        "xlabel": None,               # None: companion mass or mass ratio
         "ylabel": "Cumulative fraction",
-        "legend_loc": "lower right",
-        "figsize": (6, 4),
-        "colors": None,            # None: matplotlib C0, C1, ...
-        "band_alpha": 0.25,
-        "dpi": 300,
-    },
-
-    # Discussion: the same comparison for the log-Gaussian fits
-    "cdf_logG_Mstar": {
-        "function": "plot_model_cdf_comparison",
-        "curves": [
-            {"label": r"$M_\star > 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "highMstar", "model": "logG"},
-            {"label": r"$M_\star \leq 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "lowMstar", "model": "logG"},
-        ],
-        # Optional settings (defaults shown):
-        "credible": 0.68,          # shaded central posterior interval
-        "stack_bin": 0,            # fitted stack bin (a curve may override)
-        "n_grid": 500,             # mass grid points across the model bounds
-        "max_samples": 2000,       # posterior samples used per curve
-        "title": None,             # None: "<Model> CDF" when models match
-        "xlabel": None,            # None: companion mass or mass ratio
-        "ylabel": "Cumulative fraction",
-        "legend_loc": "lower right",
-        "figsize": (6, 4),
-        "colors": None,            # None: matplotlib C0, C1, ...
+        "legend_loc": "lower right",  # legend is drawn in the first panel
+        "panel_size": (6, 4),         # inches per panel
+        "colors": None,               # None: matplotlib C0, C1, ...
         "band_alpha": 0.25,
         "dpi": 300,
     },
@@ -225,7 +204,7 @@ def _check_subset(product_name, source, label, requested, available):
 
 
 CDF_FUNCTION = "plot_model_cdf_comparison"
-CDF_CURVE_KEYS = {"label", "run", "tier1", "tier2", "model", "stack_bin"}
+CDF_CURVE_KEYS = {"label", "run", "tier1", "tier2", "stack_bin"}
 
 
 def _resolve_cdf_product(product_name, spec, results_dir):
@@ -236,14 +215,15 @@ def _resolve_cdf_product(product_name, spec, results_dir):
                          "name is the figure name".format(product_name,
                                                           reserved))
     curves = spec.get("curves")
-    if not curves:
-        raise ValueError("{} must list its curves".format(product_name))
+    if not curves or not spec.get("models"):
+        raise ValueError("{} must list its models and curves".format(
+            product_name
+        ))
     resolved_curves = []
     folders_read = []
     for curve in curves:
         unknown = sorted(set(curve) - CDF_CURVE_KEYS)
-        missing = sorted({"label", "run", "tier1", "tier2", "model"} -
-                         set(curve))
+        missing = sorted({"label", "run", "tier1", "tier2"} - set(curve))
         if unknown or missing:
             raise ValueError("{} curve {} has unknown keys {} or is missing "
                              "{}".format(product_name, curve, unknown,
@@ -255,7 +235,7 @@ def _resolve_cdf_product(product_name, spec, results_dir):
                           [curve[key]], configuration[key + "_list"])
         resolved = {
             "label": curve["label"], "t1": curve["tier1"],
-            "t2": curve["tier2"], "t3": tier3, "model": curve["model"],
+            "t2": curve["tier2"], "t3": tier3,
         }
         if "stack_bin" in curve:
             resolved["stack_bin"] = curve["stack_bin"]
