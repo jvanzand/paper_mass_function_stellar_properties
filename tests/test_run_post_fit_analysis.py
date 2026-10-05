@@ -13,7 +13,7 @@ def test_variables_take_tier3_folders_from_runs(tmp_path, monkeypatch):
     _use_products(monkeypatch, variables={
         "function": "make_variables",
         "runs": ["paper_bounds"],
-        "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
+        "three_parameter_runs": ["stellar3params", "stellar3params_Miyazaki"],
         "tier1_dirs": ["mtrue"],
         "tier2_types": ["allstars", "Mstar"],
     })
@@ -25,14 +25,14 @@ def test_variables_take_tier3_folders_from_runs(tmp_path, monkeypatch):
     assert function_name == "make_variables"
     assert arguments["tier3_dirs"] == ["paper_bounds"]
     assert arguments["three_parameter_t3"] == [
-        "stellar3params", "stellar_3params_Miyazaki",
+        "stellar3params", "stellar3params_Miyazaki",
     ]
     assert arguments["results_dir"] == tmp_path
     assert tmp_path / "mtrue" / "highMstar" / "paper_bounds" in folders
     assert (tmp_path / "mtrue" / "lowMstarlowFeHhighAct" /
             "stellar3params") in folders
     assert (tmp_path / "mtrue" / "lowMstarlowFeHhighAct" /
-            "stellar_3params_Miyazaki") in folders
+            "stellar3params_Miyazaki") in folders
 
 
 def test_variables_without_three_parameter_run_skip_it(tmp_path, monkeypatch):

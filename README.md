@@ -81,7 +81,7 @@ recoveries or posteriors, so it can run on any machine holding the results.
 
 Subset LaTeX commands carry their run's name with digits spelled out, so
 `stellar3params` gives `\McStellarThreeParamsLowMstarLowFeHYoungNstars` and
-`stellar_3params_Miyazaki` gives
+`stellar3params_Miyazaki` gives
 `\McStellarThreeParamsMiyazakiLowMstarLowFeHYoungNstars`.
 
 ## Collecting items for the paper

@@ -96,13 +96,13 @@ RUN_CONFIGURATIONS = {
     },
     
     # Discussion: 3params runs for Miyazaki comparison
-    "stellar_3params_Miyazaki": {
+    "stellar3params_Miyazaki": {
         "tier1_list": ["mtrue"],
         "tier2_list":['highMstarhighFeHhighAct', 'highMstarhighFeHlowAct',
                       'highMstarlowFeHhighAct', 'highMstarlowFeHlowAct',
                       'lowMstarhighFeHhighAct', 'lowMstarhighFeHlowAct',
                       'lowMstarlowFeHhighAct', 'lowMstarlowFeHlowAct'],
-        "tier3_list": ["stellar_3params_Miyazaki"],
+        "tier3_list": ["stellar3params_Miyazaki"],
         "a_edges": [1, 5],
         "m_edges": [0.3, 0.6, 1.2, 2.4, 5, 10],
         "run_models_list": ["piecewise"],
@@ -151,7 +151,7 @@ RUN_CONFIGURATIONS = {
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
-RUNS_TO_DO = ["stellar3params", "stellar_3params_Miyazaki", "paper_bounds_loglinear"]
+RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin

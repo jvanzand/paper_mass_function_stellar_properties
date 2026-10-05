@@ -38,7 +38,7 @@ POST_FIT_PRODUCTS = {
     "variables": {
         "function": "make_variables",
         "runs": ["paper_bounds", "paper_bounds_noGP"],
-        "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
+        "three_parameter_runs": ["stellar3params", "stellar3params_Miyazaki"],
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
         "stack_dim": "a",
@@ -85,7 +85,7 @@ POST_FIT_PRODUCTS = {
     #             region (references variables.tex)
     "three_param_tables_Miyazaki": {
         "function": "make_three_parameter_tables",
-        "run": "stellar_3params_Miyazaki",
+        "run": "stellar3params_Miyazaki",
         "t1": "mtrue",
         "occurrence_model": "piecewise",
         "reordered_label": "tab:three_param_OR_reordered_Miyazaki",
@@ -137,7 +137,7 @@ POST_FIT_PRODUCTS = {
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
 #PRODUCTS_TO_MAKE = ["variables"]
-PRODUCTS_TO_MAKE = ["cdf_comparison"]
+PRODUCTS_TO_MAKE = None
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
