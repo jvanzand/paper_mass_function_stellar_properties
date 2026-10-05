@@ -20,19 +20,20 @@ from occurrence import post_fit_analysis as pfa
 
 
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
-# "run" names the RUN_CONFIGURATIONS entry to read; "three_parameter_runs"
+# "run" names the RUN_CONFIGURATIONS entry to read (make_variables takes a list,
+# "runs", and includes each run's own samples); "three_parameter_runs"
 # (make_variables only) lists the three-parameter runs whose subset statistics
-# are added to the variables file. Each run's name is spelled into its
-# commands: \McStellarThreeParamsLowMstarLowFeHYoungNstars for
-# "stellar3params", \McStellarThreeParamsMiyazakiLowMstar... for the
-# Miyazaki run.
+# are added to the variables file. Command names spell out the full results
+# path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
+# \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
 # Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 
-    # LaTeX variables for the main results and three-parameter subsets
+    # LaTeX variables for the main results, the no-GP escarpment fits, and
+    # the three-parameter subsets. Each run contributes the samples it has.
     "variables": {
         "function": "make_variables",
-        "run": "paper_bounds",
+        "runs": ["paper_bounds", "paper_bounds_noGP"],
         "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
@@ -119,7 +120,7 @@ TIER3_ARGUMENTS = {
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
-PRODUCT_KEYS = {"function", "run", "three_parameter_runs"}
+PRODUCT_KEYS = {"function", "run", "runs", "three_parameter_runs"}
 
 
 def _selected_product_names(product_names):
@@ -164,11 +165,11 @@ def _run_tier3(product_name, run_name):
     return configuration, configuration["tier3_list"][0]
 
 
-def _check_subset(product_name, run_name, label, requested, available):
+def _check_subset(product_name, source, label, requested, available):
     extra = [item for item in requested if item not in available]
     if extra:
-        raise ValueError("{} requests {} not in run {!r}: {}".format(
-            product_name, label, run_name, extra
+        raise ValueError("{} requests {} not in {}: {}".format(
+            product_name, label, source, extra
         ))
 
 
@@ -184,8 +185,17 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
         raise ValueError("{} uses unsupported function {!r}; supported: "
                          "{}".format(product_name, function_name,
                                      sorted(TIER3_ARGUMENTS)))
-    if "run" not in spec:
-        raise ValueError("{} must name the run it reads".format(product_name))
+    run_key = "runs" if function_name == "make_variables" else "run"
+    other_key = "run" if run_key == "runs" else "runs"
+    if run_key not in spec or other_key in spec:
+        raise ValueError("{} must name what it reads with {!r}".format(
+            product_name, run_key
+        ))
+    run_names = (
+        list(spec["runs"]) if run_key == "runs" else [spec["run"]]
+    )
+    if not run_names or len(set(run_names)) != len(run_names):
+        raise ValueError("{} must list distinct runs".format(product_name))
     tier3_argument = TIER3_ARGUMENTS[function_name]
     reserved = {tier3_argument, "results_dir", "three_parameter_t3"}
     if function_name in TIER2_DIRS_FUNCTIONS:
@@ -198,14 +208,14 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
             )
         )
 
-    run_name = spec["run"]
-    configuration, tier3 = _run_tier3(product_name, run_name)
+    runs = [(name,) + _run_tier3(product_name, name) for name in run_names]
     arguments = {
         key: value for key, value in spec.items() if key not in PRODUCT_KEYS
     }
     arguments["results_dir"] = Path(results_dir)
+    tier3s = [tier3 for _, _, tier3 in runs]
     arguments[tier3_argument] = (
-        [tier3] if tier3_argument == "tier3_dirs" else tier3
+        tier3s if tier3_argument == "tier3_dirs" else tier3s[0]
     )
 
     tier1_dirs = (
@@ -217,17 +227,32 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     elif "tier2_types" in arguments:
         tier2_dirs = _expand_tier2_types(arguments["tier2_types"])
     else:
-        tier2_dirs = list(configuration["tier2_list"])
+        tier2_dirs = list(runs[0][1]["tier2_list"])
         if function_name in TIER2_DIRS_FUNCTIONS:
             arguments["tier2_dirs"] = tier2_dirs
-    _check_subset(product_name, run_name, "Tier 1 folders", tier1_dirs,
-                  configuration["tier1_list"])
-    _check_subset(product_name, run_name, "Tier 2 folders", tier2_dirs,
-                  configuration["tier2_list"])
-    folders_read = [
-        Path(results_dir) / tier1 / tier2 / tier3
-        for tier1 in tier1_dirs for tier2 in tier2_dirs
-    ]
+
+    # Each run contributes the requested samples it has; together the runs
+    # must cover every requested sample, and every run must contribute.
+    run_label = (
+        "run {!r}".format(run_names[0]) if len(runs) == 1
+        else "runs {}".format(run_names)
+    )
+    _check_subset(product_name, run_label, "Tier 1 folders", tier1_dirs,
+                  [t1 for _, c, _ in runs for t1 in c["tier1_list"]])
+    _check_subset(product_name, run_label, "Tier 2 folders", tier2_dirs,
+                  [t2 for _, c, _ in runs for t2 in c["tier2_list"]])
+    folders_read = []
+    for run_name, configuration, tier3 in runs:
+        run_folders = [
+            Path(results_dir) / tier1 / tier2 / tier3
+            for tier1 in tier1_dirs if tier1 in configuration["tier1_list"]
+            for tier2 in tier2_dirs if tier2 in configuration["tier2_list"]
+        ]
+        if not run_folders:
+            raise ValueError("{} reads none of run {!r}'s samples".format(
+                product_name, run_name
+            ))
+        folders_read.extend(run_folders)
 
     if "three_parameter_runs" in spec and function_name != "make_variables":
         raise ValueError(

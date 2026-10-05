@@ -12,7 +12,7 @@ def _use_products(monkeypatch, **products):
 def test_variables_take_tier3_folders_from_runs(tmp_path, monkeypatch):
     _use_products(monkeypatch, variables={
         "function": "make_variables",
-        "run": "paper_bounds",
+        "runs": ["paper_bounds"],
         "three_parameter_runs": ["stellar3params", "stellar_3params_Miyazaki"],
         "tier1_dirs": ["mtrue"],
         "tier2_types": ["allstars", "Mstar"],
@@ -37,7 +37,7 @@ def test_variables_take_tier3_folders_from_runs(tmp_path, monkeypatch):
 
 def test_variables_without_three_parameter_run_skip_it(tmp_path, monkeypatch):
     _use_products(monkeypatch, variables={
-        "function": "make_variables", "run": "paper_bounds",
+        "function": "make_variables", "runs": ["paper_bounds"],
         "tier1_dirs": ["mtrue"], "tier2_types": ["allstars"],
     })
     _, arguments, _ = post_fit.resolve_product("variables", tmp_path)
@@ -126,3 +126,54 @@ def test_configured_products_resolve(tmp_path):
     for name in post_fit.POST_FIT_PRODUCTS:
         post_fit.resolve_product(name, tmp_path)
     post_fit._selected_product_names(None)
+
+
+def test_variables_include_each_runs_own_samples(tmp_path, monkeypatch):
+    _use_products(monkeypatch, variables={
+        "function": "make_variables",
+        "runs": ["paper_bounds", "paper_bounds_noGP"],
+        "tier1_dirs": ["mtrue", "qtrue"],
+        "tier2_types": ["allstars", "Mstar"],
+    })
+
+    _, arguments, folders = post_fit.resolve_product("variables", tmp_path)
+
+    assert arguments["tier3_dirs"] == ["paper_bounds", "paper_bounds_noGP"]
+    no_gp = sorted(folder.relative_to(tmp_path) for folder in folders
+                   if folder.name == "paper_bounds_noGP")
+    assert no_gp == [
+        post_fit.Path("mtrue/allstars/paper_bounds_noGP"),
+        post_fit.Path("qtrue/allstars/paper_bounds_noGP"),
+    ]
+    assert len(folders) == 2*3 + 2
+
+
+def test_variables_need_every_run_to_contribute(tmp_path, monkeypatch):
+    _use_products(monkeypatch, variables={
+        "function": "make_variables",
+        "runs": ["paper_bounds", "paper_bounds_noGP"],
+        "tier1_dirs": ["mtrue"], "tier2_types": ["FeH"],
+    })
+    with pytest.raises(ValueError, match="none of run 'paper_bounds_noGP'"):
+        post_fit.resolve_product("variables", tmp_path)
+
+
+def test_variables_reject_samples_no_run_has(tmp_path, monkeypatch):
+    _use_products(monkeypatch, variables={
+        "function": "make_variables",
+        "runs": ["paper_bounds", "paper_bounds_noGP"],
+        "tier1_dirs": ["msini"], "tier2_types": ["allstars"],
+    })
+    with pytest.raises(ValueError, match="msini"):
+        post_fit.resolve_product("variables", tmp_path)
+
+
+def test_variables_use_runs_and_tables_use_run(tmp_path, monkeypatch):
+    _use_products(monkeypatch,
+                  variables={"function": "make_variables",
+                             "run": "paper_bounds"},
+                  table={"function": "make_two_parameter_tables",
+                         "runs": ["stellar2params"]})
+    for name in ("variables", "table"):
+        with pytest.raises(ValueError, match="must name what it reads"):
+            post_fit.resolve_product(name, tmp_path)

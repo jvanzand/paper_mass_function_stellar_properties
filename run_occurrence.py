@@ -389,6 +389,11 @@ def resolve_run_configuration(name):
     entry = RUN_CONFIGURATIONS[name]
     source_name = entry.get("reuse_fits_from")
     if source_name is None:
+        if list(entry["tier3_list"]) != [name]:
+            raise ValueError(
+                "{} must write to a Tier 3 folder named after itself; set "
+                "\"tier3_list\": [{!r}]".format(name, name)
+            )
         return dict(entry)
 
     if source_name not in RUN_CONFIGURATIONS:

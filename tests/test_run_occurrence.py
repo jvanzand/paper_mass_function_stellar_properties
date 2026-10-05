@@ -230,3 +230,16 @@ def test_configured_derived_runs_resolve():
     for name, entry in run.RUN_CONFIGURATIONS.items():
         if "reuse_fits_from" in entry:
             run.resolve_run_configuration(name)
+
+
+def test_runs_write_to_a_tier3_folder_named_after_themselves(monkeypatch):
+    configurations = _source_and_derived_runs()
+    configurations["source_run"]["tier3_list"] = ["other_folder"]
+    monkeypatch.setattr(run, "RUN_CONFIGURATIONS", configurations)
+    with pytest.raises(ValueError, match="named after itself"):
+        run.resolve_run_configuration("source_run")
+
+
+def test_configured_runs_are_named_after_their_folders():
+    for name in run.RUN_CONFIGURATIONS:
+        assert run.resolve_run_configuration(name)["tier3_list"] == [name]

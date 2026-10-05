@@ -10,9 +10,11 @@ paper, for example::
 Figures come from experiment ``plots`` folders written by
 ``run_occurrence.py``; tables and variables come from ``results/paper_tables/``
 written by ``run_post_fit_analysis.py``. Every source is checked before
-anything is copied, so a collection is never left half-updated.
+anything is copied, so a collection is never left half-updated, and every
+results macro a collected table uses must be defined in ``variables.tex``.
 """
 
+import re
 import shutil
 from pathlib import Path
 
@@ -70,6 +72,29 @@ PAPER_TABLES = {
     "three_parameter_OR_reordered_mtrue_stellar3params.tex":
         "three_param_OR_table_reordered.tex",
 }
+
+
+VARIABLES_NAME = "variables.tex"
+# Results macros start with a Tier 1 prefix (Mc, Msini, Q, Qsini), e.g.
+# \McAllstarsPaperBoundsNstars. Lowercase continuations are matched too, so
+# stale names such as \McallstarsNstars are caught.
+RESULTS_MACRO = re.compile(r"\\((?:Mc|Msini|Qsini|Q)[A-Za-z]+)")
+DEFINED_MACRO = re.compile(r"\\newcommand\{\\([A-Za-z]+)\}")
+
+
+def undefined_table_macros(plan):
+    """Return {table: [macros]} for results macros variables.tex lacks."""
+    defined = set(DEFINED_MACRO.findall(
+        plan[Path(VARIABLES_NAME)].read_text()
+    ))
+    undefined = {}
+    for destination, source in sorted(plan.items()):
+        if destination.suffix != ".tex" or destination.name == VARIABLES_NAME:
+            continue
+        used = set(RESULTS_MACRO.findall(source.read_text()))
+        if used - defined:
+            undefined[str(destination)] = sorted(used - defined)
+    return undefined
 
 
 def figure_name(figure):
@@ -135,6 +160,15 @@ def main(results_dir=RESULTS_DIR, paper_items_dir=PAPER_ITEMS_DIR,
             "{} paper item sources are missing; run run_occurrence.py and "
             "run_post_fit_analysis.py for them first:\n  {}".format(
                 len(missing), "\n  ".join(missing)
+            )
+        )
+    undefined = undefined_table_macros(plan)
+    if undefined:
+        raise ValueError(
+            "tables use macros that variables.tex does not define; rerun "
+            "run_post_fit_analysis.py for all of them together:\n  {}".format(
+                "\n  ".join("{}: {}".format(table, ", ".join(macros))
+                            for table, macros in undefined.items())
             )
         )
     print("Collecting {} items into {}".format(len(plan), paper_items_dir))

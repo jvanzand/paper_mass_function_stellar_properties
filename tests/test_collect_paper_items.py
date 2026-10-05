@@ -79,3 +79,32 @@ def test_main_only_empties_a_paper_items_folder(tmp_path):
     _write_sources(results_dir, collect.collection_plan(results_dir))
     with pytest.raises(ValueError, match="refusing"):
         collect.main(results_dir, tmp_path / "Figures")
+
+
+def test_main_rejects_tables_using_undefined_macros(tmp_path):
+    results_dir = tmp_path / "results"
+    paper_items = tmp_path / "paper_items"
+    plan = collect.collection_plan(results_dir)
+    _write_sources(results_dir, plan)
+    plan[collect.Path("variables.tex")].write_text(
+        r"\newcommand{\McAllstarsPaperBoundsNstars}{\ensuremath{719}}"
+    )
+    plan[collect.Path("model_params_table.tex")].write_text(
+        r"\tablecaption{x} \McAllstarsPaperBoundsNstars & \McallstarsNstars"
+    )
+
+    with pytest.raises(ValueError, match="McallstarsNstars"):
+        collect.main(results_dir, paper_items)
+    assert not paper_items.exists()
+
+
+def test_tables_may_use_any_defined_macro(tmp_path):
+    plan = collect.collection_plan(tmp_path)
+    _write_sources(tmp_path, plan)
+    plan[collect.Path("variables.tex")].write_text(
+        r"\newcommand{\QLowMstarPaperBoundsNeff}{\ensuremath{3.1}}"
+    )
+    plan[collect.Path("three_param_OR_table.tex")].write_text(
+        r"\QLowMstarPaperBoundsNeff"
+    )
+    assert collect.undefined_table_macros(plan) == {}
