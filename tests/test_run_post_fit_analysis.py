@@ -177,3 +177,59 @@ def test_variables_use_runs_and_tables_use_run(tmp_path, monkeypatch):
     for name in ("variables", "table"):
         with pytest.raises(ValueError, match="must name what it reads"):
             post_fit.resolve_product(name, tmp_path)
+
+
+def _cdf_product(**overrides):
+    product = {
+        "function": "plot_model_cdf_comparison",
+        "curves": [
+            {"label": "high", "run": "paper_bounds", "tier1": "mtrue",
+             "tier2": "highMstar", "model": "sigmoid"},
+            {"label": "low", "run": "paper_bounds", "tier1": "mtrue",
+             "tier2": "lowMstar", "model": "sigmoid", "stack_bin": 1},
+        ],
+        "credible": 0.95,
+    }
+    product.update(overrides)
+    return product
+
+
+def test_cdf_curves_take_tier3_folders_from_their_runs(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product())
+
+    function_name, arguments, folders = post_fit.resolve_product("cdf",
+                                                                 tmp_path)
+
+    assert function_name == "plot_model_cdf_comparison"
+    assert arguments["name"] == "cdf"
+    assert arguments["credible"] == 0.95
+    assert arguments["curves"][0] == {
+        "label": "high", "t1": "mtrue", "t2": "highMstar",
+        "t3": "paper_bounds", "model": "sigmoid",
+    }
+    assert arguments["curves"][1]["stack_bin"] == 1
+    assert folders == [tmp_path / "mtrue" / "highMstar" / "paper_bounds",
+                       tmp_path / "mtrue" / "lowMstar" / "paper_bounds"]
+
+
+def test_cdf_curves_must_belong_to_their_run(tmp_path, monkeypatch):
+    product = _cdf_product()
+    product["curves"][0]["run"] = "paper_bounds_noGP"
+    _use_products(monkeypatch, cdf=product)
+    with pytest.raises(ValueError, match="highMstar"):
+        post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_cdf_products_reject_misspelled_curve_keys(tmp_path, monkeypatch):
+    product = _cdf_product()
+    product["curves"][0]["tier_2"] = product["curves"][0].pop("tier2")
+    _use_products(monkeypatch, cdf=product)
+    with pytest.raises(ValueError, match="tier_2"):
+        post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_cdf_products_name_their_figure_after_the_product(tmp_path,
+                                                          monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(name="other"))
+    with pytest.raises(ValueError, match="product name"):
+        post_fit.resolve_product("cdf", tmp_path)

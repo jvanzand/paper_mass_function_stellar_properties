@@ -26,6 +26,8 @@ from occurrence import post_fit_analysis as pfa
 # are added to the variables file. Command names spell out the full results
 # path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
 # \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
+# plot_model_cdf_comparison products instead list "curves", each naming its own
+# run, tier1, tier2, and model; the product name becomes the figure name.
 # Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 
@@ -88,6 +90,55 @@ POST_FIT_PRODUCTS = {
         "original_label": "tab:three_param_OR_Miyazaki",
     },
     
+    # Discussion: normalized CDFs of the high- and low-mass sigmoid fits,
+    # saved to results/cdf_comparisons/<product name>.png
+    "cdf_sigmoid_Mstar": {
+        "function": "plot_model_cdf_comparison",
+        "curves": [
+            {"label": r"$M_\star > 1\,M_\odot$", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "highMstar", "model": "sigmoid"},
+            {"label": r"$M_\star \leq 1\,M_\odot$", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "lowMstar", "model": "sigmoid"},
+        ],
+        # Optional settings (defaults shown):
+        "credible": 0.68,          # shaded central posterior interval
+        "stack_bin": 0,            # fitted stack bin (a curve may override)
+        "n_grid": 500,             # mass grid points across the model bounds
+        "max_samples": 2000,       # posterior samples used per curve
+        "title": None,             # None: "<Model> CDF" when models match
+        "xlabel": None,            # None: companion mass or mass ratio
+        "ylabel": "Cumulative fraction",
+        "legend_loc": "lower right",
+        "figsize": (6, 4),
+        "colors": None,            # None: matplotlib C0, C1, ...
+        "band_alpha": 0.25,
+        "dpi": 300,
+    },
+
+    # Discussion: the same comparison for the log-Gaussian fits
+    "cdf_logG_Mstar": {
+        "function": "plot_model_cdf_comparison",
+        "curves": [
+            {"label": r"$M_\star > 1\,M_\odot$", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "highMstar", "model": "logG"},
+            {"label": r"$M_\star \leq 1\,M_\odot$", "run": "paper_bounds",
+             "tier1": "mtrue", "tier2": "lowMstar", "model": "logG"},
+        ],
+        # Optional settings (defaults shown):
+        "credible": 0.68,          # shaded central posterior interval
+        "stack_bin": 0,            # fitted stack bin (a curve may override)
+        "n_grid": 500,             # mass grid points across the model bounds
+        "max_samples": 2000,       # posterior samples used per curve
+        "title": None,             # None: "<Model> CDF" when models match
+        "xlabel": None,            # None: companion mass or mass ratio
+        "ylabel": "Cumulative fraction",
+        "legend_loc": "lower right",
+        "figsize": (6, 4),
+        "colors": None,            # None: matplotlib C0, C1, ...
+        "band_alpha": 0.25,
+        "dpi": 300,
+    },
+
 #    # Optional: Mass-metallicity occurrence tables
 #   "two_param_tables": {
 #        "function": "make_two_parameter_tables",
@@ -173,6 +224,54 @@ def _check_subset(product_name, source, label, requested, available):
         ))
 
 
+CDF_FUNCTION = "plot_model_cdf_comparison"
+CDF_CURVE_KEYS = {"label", "run", "tier1", "tier2", "model", "stack_bin"}
+
+
+def _resolve_cdf_product(product_name, spec, results_dir):
+    """Resolve a CDF comparison whose curves each name their own run."""
+    reserved = sorted({"results_dir", "name", "run", "runs"} & set(spec))
+    if reserved:
+        raise ValueError("{} sets {}; curves name their runs and the product "
+                         "name is the figure name".format(product_name,
+                                                          reserved))
+    curves = spec.get("curves")
+    if not curves:
+        raise ValueError("{} must list its curves".format(product_name))
+    resolved_curves = []
+    folders_read = []
+    for curve in curves:
+        unknown = sorted(set(curve) - CDF_CURVE_KEYS)
+        missing = sorted({"label", "run", "tier1", "tier2", "model"} -
+                         set(curve))
+        if unknown or missing:
+            raise ValueError("{} curve {} has unknown keys {} or is missing "
+                             "{}".format(product_name, curve, unknown,
+                                         missing))
+        configuration, tier3 = _run_tier3(product_name, curve["run"])
+        for key in ("tier1", "tier2"):
+            _check_subset(product_name, "run {!r}".format(curve["run"]),
+                          key.replace("tier", "Tier ") + " folders",
+                          [curve[key]], configuration[key + "_list"])
+        resolved = {
+            "label": curve["label"], "t1": curve["tier1"],
+            "t2": curve["tier2"], "t3": tier3, "model": curve["model"],
+        }
+        if "stack_bin" in curve:
+            resolved["stack_bin"] = curve["stack_bin"]
+        resolved_curves.append(resolved)
+        folders_read.append(
+            Path(results_dir) / curve["tier1"] / curve["tier2"] / tier3
+        )
+    arguments = {
+        key: value for key, value in spec.items()
+        if key not in {"function", "curves"}
+    }
+    arguments.update(results_dir=Path(results_dir), curves=resolved_curves,
+                     name=product_name)
+    return CDF_FUNCTION, arguments, folders_read
+
+
 def resolve_product(product_name, results_dir=RESULTS_DIR):
     """Return ``(function_name, arguments, folders_read)`` for a product.
 
@@ -181,10 +280,13 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     """
     spec = dict(POST_FIT_PRODUCTS[product_name])
     function_name = spec.get("function")
+    if function_name == CDF_FUNCTION:
+        return _resolve_cdf_product(product_name, spec, results_dir)
     if function_name not in TIER3_ARGUMENTS:
         raise ValueError("{} uses unsupported function {!r}; supported: "
                          "{}".format(product_name, function_name,
-                                     sorted(TIER3_ARGUMENTS)))
+                                     sorted(set(TIER3_ARGUMENTS) |
+                                            {CDF_FUNCTION})))
     run_key = "runs" if function_name == "make_variables" else "run"
     other_key = "run" if run_key == "runs" else "runs"
     if run_key not in spec or other_key in spec:

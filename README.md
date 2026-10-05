@@ -65,6 +65,11 @@ selects the products to build by default:
 python run_post_fit_analysis.py
 ```
 
+`plot_model_cdf_comparison` products (e.g. `cdf_sigmoid_Mstar`) overlay the
+normalized CDFs of fitted models, each curve naming its own run, samples, and
+model; every plotting option is listed in the product and the figure goes to
+`results/cdf_comparisons/<product name>.png`.
+
 Products stop with a message naming the missing result folders if their runs
 have not been completed. Outputs go to `results/paper_tables/`; plots go to the
 matching experiment's `plots` folder. It needs only `results/`, not the
