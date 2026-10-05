@@ -183,71 +183,89 @@ def _cdf_product(**overrides):
     product = {
         "function": "plot_model_cdf_comparison",
         "models": ["sigmoid", "logG"],
-        "curves": [
-            {"label": "high", "run": "paper_bounds", "tier1": "mtrue",
-             "tier2": "highMstar"},
-            {"label": "low", "run": "paper_bounds", "tier1": "mtrue",
-             "tier2": "lowMstar", "stack_bin": 1},
-        ],
+        "sample_pairs": ["Mstar", "Act"],
+        "run": "paper_bounds",
+        "tier1": "mtrue",
         "credible": 0.95,
     }
     product.update(overrides)
     return product
 
 
-def test_cdf_curves_take_tier3_folders_from_their_runs(tmp_path, monkeypatch):
-    _use_products(monkeypatch, cdf=_cdf_product())
+def test_cdf_rows_are_high_and_low_sample_pairs(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(labels={"highAct": "Young"}))
 
-    function_name, arguments, folders = post_fit.resolve_product("cdf",
-                                                                 tmp_path)
+    function_name, arguments, paths = post_fit.resolve_product("cdf",
+                                                               tmp_path)
 
     assert function_name == "plot_model_cdf_comparison"
     assert arguments["name"] == "cdf"
-    assert arguments["credible"] == 0.95
     assert arguments["models"] == ["sigmoid", "logG"]
-    assert arguments["curves"][0] == {
-        "label": "high", "t1": "mtrue", "t2": "highMstar",
-        "t3": "paper_bounds",
+    assert arguments["credible"] == 0.95
+    assert [[curve["t2"] for curve in row] for row in arguments["rows"]] == [
+        ["highMstar", "lowMstar"], ["highAct", "lowAct"],
+    ]
+    assert arguments["rows"][0][0] == {
+        "label": post_fit.tier2_df_cuts_dict["highMstar"][1],
+        "t1": "mtrue", "t2": "highMstar", "t3": "paper_bounds",
     }
-    assert arguments["curves"][1]["stack_bin"] == 1
-    assert folders == [tmp_path / "mtrue" / "highMstar" / "paper_bounds",
-                       tmp_path / "mtrue" / "lowMstar" / "paper_bounds"]
+    assert [curve["label"] for curve in arguments["rows"][1]] == [
+        "Young", post_fit.tier2_df_cuts_dict["lowAct"][1],
+    ]
+    for key in ("sample_pairs", "run", "tier1", "labels"):
+        assert key not in arguments
 
 
-def test_cdf_curves_must_belong_to_their_run(tmp_path, monkeypatch):
-    product = _cdf_product()
-    product["curves"][0]["run"] = "paper_bounds_noGP"
-    _use_products(monkeypatch, cdf=product)
+def test_cdf_products_check_every_chain_before_plotting(tmp_path,
+                                                        monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product())
+    _, _, paths = post_fit.resolve_product("cdf", tmp_path)
+    chains = {path.relative_to(tmp_path) for path in paths
+              if path.suffix == ".npz"}
+    assert len(chains) == 4*2
+    assert post_fit.Path(
+        "mtrue/lowAct/paper_bounds/saved_chains/chains_logG_bin0.npz"
+    ) in chains
+
+    for path in paths:
+        if path.suffix != ".npz":
+            path.mkdir(parents=True, exist_ok=True)
+        elif "logG" not in path.name:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+    monkeypatch.setattr(
+        post_fit.pfa, "plot_model_cdf_comparison",
+        lambda **kwargs: pytest.fail("plotted without every chain"),
+    )
+    with pytest.raises(FileNotFoundError, match="chains_logG_bin0"):
+        post_fit.main(["cdf"], results_dir=tmp_path)
+
+
+def test_cdf_sample_pairs_must_belong_to_the_run(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(run="paper_bounds_noGP"))
     with pytest.raises(ValueError, match="highMstar"):
         post_fit.resolve_product("cdf", tmp_path)
 
 
-def test_cdf_products_reject_misspelled_curve_keys(tmp_path, monkeypatch):
-    product = _cdf_product()
-    product["curves"][0]["tier_2"] = product["curves"][0].pop("tier2")
-    _use_products(monkeypatch, cdf=product)
-    with pytest.raises(ValueError, match="tier_2"):
+def test_cdf_labels_must_name_plotted_samples(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(labels={"highFeH": "x"}))
+    with pytest.raises(ValueError, match="highFeH"):
         post_fit.resolve_product("cdf", tmp_path)
 
 
-def test_cdf_products_name_their_figure_after_the_product(tmp_path,
-                                                          monkeypatch):
-    _use_products(monkeypatch, cdf=_cdf_product(name="other"))
-    with pytest.raises(ValueError, match="product name"):
+@pytest.mark.parametrize("change", [
+    {"name": "other"}, {"rows": []},
+])
+def test_cdf_products_cannot_set_derived_arguments(tmp_path, monkeypatch,
+                                                   change):
+    _use_products(monkeypatch, cdf=_cdf_product(**change))
+    with pytest.raises(ValueError, match="sample_pairs"):
         post_fit.resolve_product("cdf", tmp_path)
 
 
-def test_cdf_products_need_models(tmp_path, monkeypatch):
+def test_cdf_products_need_models_and_pairs(tmp_path, monkeypatch):
     product = _cdf_product()
-    del product["models"]
+    del product["sample_pairs"]
     _use_products(monkeypatch, cdf=product)
-    with pytest.raises(ValueError, match="models and curves"):
-        post_fit.resolve_product("cdf", tmp_path)
-
-
-def test_cdf_curves_no_longer_name_a_model(tmp_path, monkeypatch):
-    product = _cdf_product()
-    product["curves"][0]["model"] = "sigmoid"
-    _use_products(monkeypatch, cdf=product)
-    with pytest.raises(ValueError, match="model"):
+    with pytest.raises(ValueError, match="sample_pairs"):
         post_fit.resolve_product("cdf", tmp_path)

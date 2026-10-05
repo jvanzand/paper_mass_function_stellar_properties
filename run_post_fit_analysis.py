@@ -14,6 +14,7 @@ Tier 2 choices are checked against that run before anything is made.
 
 from pathlib import Path
 
+from config_dict import tier2_df_cuts_dict
 from run_occurrence import RESULTS_DIR, resolve_run_configuration
 
 from occurrence import post_fit_analysis as pfa
@@ -26,9 +27,9 @@ from occurrence import post_fit_analysis as pfa
 # are added to the variables file. Command names spell out the full results
 # path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
 # \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
-# plot_model_cdf_comparison products instead list "models" (one panel each) and
-# "curves", each naming its own run, tier1, and tier2; the product name becomes
-# the figure name.
+# plot_model_cdf_comparison products instead list "models" (columns) and
+# "sample_pairs" (rows, e.g. "Mstar" for highMstar and lowMstar) from one run
+# and tier1; the product name becomes the figure name.
 # Every other key is passed through as a keyword argument.
 POST_FIT_PRODUCTS = {
 
@@ -91,52 +92,30 @@ POST_FIT_PRODUCTS = {
         "original_label": "tab:three_param_OR_Miyazaki",
     },
     
-    # Discussion: normalized CDFs of the high- and low-mass fits, one panel
-    # per model, saved to results/cdf_comparisons/<product name>.png
-    "cdf_Mstar": {
+    # Discussion: normalized CDFs of every model (columns) for every pair of
+    # stellar samples (rows), saved to results/cdf_comparisons/<name>.png
+    "cdf_comparison": {
         "function": "plot_model_cdf_comparison",
-        "models": ["sigmoid", "logG"],
-        "curves": [
-            {"label": r"$M_\star > 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "highMstar"},
-            {"label": r"$M_\star \leq 1\,M_\odot$", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "lowMstar"},
-        ],
+        "models": ["sigmoid", "logG"],          # one column each
+        "sample_pairs": ["Mstar", "FeH", "Act"],  # one row each: high/low
+        "run": "paper_bounds",
+        "tier1": "mtrue",
         # Optional settings (defaults shown):
-        "orientation": "horizontal",  # or "vertical"
-        "title": "{model} CDF",       # every panel; {model} -> model name
+        "labels": {},                 # legend text by sample, e.g.
+                                      # {"highAct": "Young"}; others use
+                                      # the config_dict.py sample titles
+        "title": "{model} CDF",       # heads each column; {model} -> name
+        "credible": 0.68,             # shaded central posterior interval
+        "stack_bin": 0,               # fitted stack bin
+        "n_grid": 500,                # mass grid points across the bounds
         "max_samples": 2000,          # posterior samples used per curve
         "xlabel": None,               # None: companion mass or mass ratio
         "ylabel": "Cumulative fraction",
-        "legend_loc": "lower right",  # legend is drawn in the first panel
-        "panel_size": (6, 4),         # inches per panel
-        "colors": None,               # None: matplotlib C0, C1, ...
-    },
-    
-    # Discussion: normalized CDFs of the high- and low-metallicity fits, one panel
-    # per model, saved to results/cdf_comparisons/<product name>.png
-    "cdf_FeH": {
-        "function": "plot_model_cdf_comparison",
-        "models": ["sigmoid", "logG"],
-        "curves": [
-            {"label": r"[Fe/H]>0", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "highFeH"},
-            {"label": r"[Fe/H] $\leq$ 0", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "lowFeH"},
-        ],
-    },
-    
-    # Discussion: normalized CDFs of the high- and low-metallicity fits, one panel
-    # per model, saved to results/cdf_comparisons/<product name>.png
-    "cdf_Age": {
-        "function": "plot_model_cdf_comparison",
-        "models": ["sigmoid", "logG"],
-        "curves": [
-            {"label": r"Age>5", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "lowAct"},
-            {"label": r"Age $\leq$ 5", "run": "paper_bounds",
-             "tier1": "mtrue", "tier2": "highAct"},
-        ],
+        "legend_loc": "lower right",  # legend in each row's first panel
+        "panel_size": (5, 3.5),       # inches per panel
+        "colors": None,               # None: C0 for high, C1 for low
+        "band_alpha": 0.25,
+        "dpi": 300,
     },
 
 #    # Optional: Mass-metallicity occurrence tables
@@ -154,7 +133,7 @@ POST_FIT_PRODUCTS = {
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
 #PRODUCTS_TO_MAKE = ["variables"]
-PRODUCTS_TO_MAKE = ["cdf_Mstar", "cdf_FeH", "cdf_Age"]
+PRODUCTS_TO_MAKE = ["cdf_comparison"]
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
@@ -225,52 +204,64 @@ def _check_subset(product_name, source, label, requested, available):
 
 
 CDF_FUNCTION = "plot_model_cdf_comparison"
-CDF_CURVE_KEYS = {"label", "run", "tier1", "tier2", "stack_bin"}
 
 
 def _resolve_cdf_product(product_name, spec, results_dir):
-    """Resolve a CDF comparison whose curves each name their own run."""
-    reserved = sorted({"results_dir", "name", "run", "runs"} & set(spec))
+    """Resolve a grid of model CDFs for pairs of stellar samples.
+
+    Each entry of ``sample_pairs`` (e.g. ``"Mstar"``) becomes a row holding
+    its high and low samples, labeled with their config_dict.py titles unless
+    ``labels`` overrides them. Every sample must have a saved chain for every
+    model; the chain files are returned with the folders so they are checked
+    before anything is made.
+    """
+    reserved = sorted({"results_dir", "name", "rows", "runs"} & set(spec))
     if reserved:
-        raise ValueError("{} sets {}; curves name their runs and the product "
-                         "name is the figure name".format(product_name,
-                                                          reserved))
-    curves = spec.get("curves")
-    if not curves or not spec.get("models"):
-        raise ValueError("{} must list its models and curves".format(
+        raise ValueError("{} sets {}; rows come from sample_pairs and the "
+                         "product name is the figure name".format(
+                             product_name, reserved))
+    missing = sorted({"models", "sample_pairs", "run", "tier1"} - set(spec))
+    if missing:
+        raise ValueError("{} must set {}".format(product_name, missing))
+    models = list(spec["models"])
+    pairs = list(spec["sample_pairs"])
+    if not models or not pairs:
+        raise ValueError("{} must list models and sample_pairs".format(
             product_name
         ))
-    resolved_curves = []
-    folders_read = []
-    for curve in curves:
-        unknown = sorted(set(curve) - CDF_CURVE_KEYS)
-        missing = sorted({"label", "run", "tier1", "tier2"} - set(curve))
-        if unknown or missing:
-            raise ValueError("{} curve {} has unknown keys {} or is missing "
-                             "{}".format(product_name, curve, unknown,
-                                         missing))
-        configuration, tier3 = _run_tier3(product_name, curve["run"])
-        for key in ("tier1", "tier2"):
-            _check_subset(product_name, "run {!r}".format(curve["run"]),
-                          key.replace("tier", "Tier ") + " folders",
-                          [curve[key]], configuration[key + "_list"])
-        resolved = {
-            "label": curve["label"], "t1": curve["tier1"],
-            "t2": curve["tier2"], "t3": tier3,
-        }
-        if "stack_bin" in curve:
-            resolved["stack_bin"] = curve["stack_bin"]
-        resolved_curves.append(resolved)
-        folders_read.append(
-            Path(results_dir) / curve["tier1"] / curve["tier2"] / tier3
+    run_name, tier1 = spec["run"], spec["tier1"]
+    configuration, tier3 = _run_tier3(product_name, run_name)
+    _check_subset(product_name, "run {!r}".format(run_name),
+                  "Tier 1 folders", [tier1], configuration["tier1_list"])
+    rows = [_expand_tier2_types([pair]) for pair in pairs]
+    tier2_dirs = [tier2 for row in rows for tier2 in row]
+    _check_subset(product_name, "run {!r}".format(run_name),
+                  "Tier 2 folders", tier2_dirs, configuration["tier2_list"])
+    labels = dict(spec.get("labels") or {})
+    _check_subset(product_name, "its sample_pairs", "labels for",
+                  list(labels), tier2_dirs)
+
+    stack_bin = spec.get("stack_bin", 0)
+    files_read = []
+    for tier2 in tier2_dirs:
+        folder = Path(results_dir) / tier1 / tier2 / tier3
+        files_read.append(folder)
+        files_read.extend(
+            folder / "saved_chains" /
+            "chains_{}_bin{}.npz".format(model, stack_bin)
+            for model in models
         )
     arguments = {
         key: value for key, value in spec.items()
-        if key not in {"function", "curves"}
+        if key not in {"function", "sample_pairs", "run", "tier1", "labels"}
     }
-    arguments.update(results_dir=Path(results_dir), curves=resolved_curves,
-                     name=product_name)
-    return CDF_FUNCTION, arguments, folders_read
+    arguments.update(
+        results_dir=Path(results_dir), name=product_name,
+        rows=[[{"label": labels.get(tier2, tier2_df_cuts_dict[tier2][1]),
+                "t1": tier1, "t2": tier2, "t3": tier3}
+               for tier2 in row] for row in rows],
+    )
+    return CDF_FUNCTION, arguments, files_read
 
 
 def resolve_product(product_name, results_dir=RESULTS_DIR):
@@ -381,8 +372,8 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     return function_name, arguments, folders_read
 
 
-def _check_folders_exist(product_name, folders_read):
-    missing = [str(folder) for folder in folders_read if not folder.is_dir()]
+def _check_folders_exist(product_name, paths_read):
+    missing = [str(path) for path in paths_read if not path.exists()]
     if missing:
         raise FileNotFoundError(
             "{} reads results that do not exist yet; run them with "

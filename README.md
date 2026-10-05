@@ -65,12 +65,13 @@ selects the products to build by default:
 python run_post_fit_analysis.py
 ```
 
-`plot_model_cdf_comparison` products (e.g. `cdf_Mstar`) overlay the normalized
-CDFs of fitted samples, with one panel per entry in `models`, arranged by
-`orientation`; each curve names its own run and samples, and one `title`
-applies to every panel (`{model}` becomes the panel's model). Every plotting
+The `cdf_comparison` product draws one grid of normalized model CDFs: one
+column per entry in `models` (e.g. sigmoid, logG) and one row per entry in
+`sample_pairs` (e.g. `Mstar` for `highMstar` vs `lowMstar`), labeled with the
+`config_dict.py` sample titles unless `labels` overrides them. Every sample
+must have a chain for every model, and all are checked before plotting. Every
 option is listed in the product, and the figure goes to
-`results/cdf_comparisons/<product name>.png`.
+`results/cdf_comparisons/cdf_comparison.png`.
 
 Products stop with a message naming the missing result folders if their runs
 have not been completed. Outputs go to `results/paper_tables/`; plots go to the
