@@ -135,7 +135,7 @@ RUN_CONFIGURATIONS = {
         "tier2_list": [
             "allstars",
         ],
-        "tier3_list": ["paper_bounds"],
+        "tier3_list": ["paper_bounds_noGP"],
         "a_edges": [0.1, 10.0],
         "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
         "run_models_list": ["piecewise", "escarpment"],
