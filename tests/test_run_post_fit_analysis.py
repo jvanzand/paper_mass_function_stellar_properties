@@ -223,6 +223,7 @@ def test_cdf_products_check_every_chain_before_plotting(tmp_path,
     chains = {path.relative_to(tmp_path) for path in paths
               if path.suffix == ".npz"}
     assert len(chains) == 4*2
+    assert tmp_path / "mtrue" / "allstars" / "paper_bounds" / "plots" in paths
     assert post_fit.Path(
         "mtrue/lowAct/paper_bounds/saved_chains/chains_logG_bin0.npz"
     ) in chains
@@ -268,4 +269,19 @@ def test_cdf_products_need_models_and_pairs(tmp_path, monkeypatch):
     del product["sample_pairs"]
     _use_products(monkeypatch, cdf=product)
     with pytest.raises(ValueError, match="sample_pairs"):
+        post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_cdf_products_need_a_full_sample_folder_to_save_into(tmp_path,
+                                                             monkeypatch):
+    import run_occurrence
+    configurations = dict(run_occurrence.RUN_CONFIGURATIONS)
+    configurations["mass_only"] = dict(
+        configurations["paper_bounds"], tier2_list=["highMstar", "lowMstar"],
+        tier3_list=["mass_only"],
+    )
+    monkeypatch.setattr(run_occurrence, "RUN_CONFIGURATIONS", configurations)
+    _use_products(monkeypatch, cdf=_cdf_product(run="mass_only",
+                                                sample_pairs=["Mstar"]))
+    with pytest.raises(ValueError, match="allstars"):
         post_fit.resolve_product("cdf", tmp_path)

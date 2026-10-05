@@ -93,7 +93,8 @@ POST_FIT_PRODUCTS = {
     },
     
     # Discussion: normalized CDFs of every model (columns) for every pair of
-    # stellar samples (rows), saved to results/cdf_comparisons/<name>.png
+    # stellar samples (rows), saved with the catalog plots in
+    # results/<tier1>/allstars/<run>/plots/<product name>.png
     "cdf_comparison": {
         "function": "plot_model_cdf_comparison",
         "models": ["sigmoid", "logG"],          # one column each
@@ -216,7 +217,8 @@ def _resolve_cdf_product(product_name, spec, results_dir):
     its high and low samples, labeled with their config_dict.py titles unless
     ``labels`` overrides them. Every sample must have a saved chain for every
     model; the chain files are returned with the folders so they are checked
-    before anything is made.
+    before anything is made. The figure is saved with the catalog plots, so
+    the run's full-sample (allstars) folder must exist too.
     """
     reserved = sorted({"results_dir", "name", "rows", "runs"} & set(spec))
     if reserved:
@@ -244,8 +246,12 @@ def _resolve_cdf_product(product_name, spec, results_dir):
     _check_subset(product_name, "its sample_pairs", "labels for",
                   list(labels), tier2_dirs)
 
+    _check_subset(product_name, "run {!r}".format(run_name),
+                  "Tier 2 folders (for saving)", ["allstars"],
+                  configuration["tier2_list"])
+
     stack_bin = spec.get("stack_bin", 0)
-    files_read = []
+    files_read = [Path(results_dir) / tier1 / "allstars" / tier3 / "plots"]
     for tier2 in tier2_dirs:
         folder = Path(results_dir) / tier1 / tier2 / tier3
         files_read.append(folder)

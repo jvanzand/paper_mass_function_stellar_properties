@@ -71,7 +71,8 @@ column per entry in `models` (e.g. sigmoid, logG) and one row per entry in
 `config_dict.py` sample titles unless `labels` overrides them. Every sample
 must have a chain for every model, and all are checked before plotting. Every
 option is listed in the product, and the figure goes to
-`results/cdf_comparisons/cdf_comparison.png`.
+`results/<tier1>/allstars/<run>/plots/cdf_comparison.png`, next to the
+catalog plots.
 
 Products stop with a message naming the missing result folders if their runs
 have not been completed. Outputs go to `results/paper_tables/`; plots go to the
