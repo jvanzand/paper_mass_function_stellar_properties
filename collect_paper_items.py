@@ -43,7 +43,9 @@ def _figures(plot, run, tier1, tier2_list):
     ]
 
 
-# Figures the paper includes, each from one experiment's plots folder.
+# Figures the paper includes, each from one experiment's plots folder. An
+# entry may set "name" to override the generated "<label>_<tier1>_<tier2>_<run>"
+# file name, e.g. for figures that combine several experiments.
 PAPER_FIGURES = [
     # Results: mass functions for the full sample and each stellar subset
     *_figures("occurrence_ORD.png", "paper_bounds", "mtrue", [
@@ -60,6 +62,11 @@ PAPER_FIGURES = [
     *_figures("occurrence_ORD.png", "paper_bounds", "qtrue", [
         "allstars", "highMstar", "lowMstar",
     ]),
+    # Discussion: normalized model CDFs for every stellar sample pair, made by
+    # run_post_fit_analysis.py's cdf_comparison product and saved with the
+    # catalog plots
+    {"plot": "cdf_comparison.png", "run": "paper_bounds", "tier1": "mtrue",
+     "tier2": "allstars", "name": "CDF_comparison.png"},
 ]
 
 # Tables and variables the paper inputs: file in results/paper_tables/ mapped
@@ -98,7 +105,16 @@ def undefined_table_macros(plan):
 
 
 def figure_name(figure):
-    """Return the uniform paper filename for a figure entry."""
+    """Return the paper filename for a figure entry.
+
+    This is the entry's "name" when given, and otherwise the uniform
+    "<label>_<tier1>_<tier2>_<run>.png".
+    """
+    if "name" in figure:
+        return figure["name"]
+    if figure["plot"] not in PLOT_LABELS:
+        raise ValueError("no label for plot {!r}; add it to PLOT_LABELS or "
+                         "give the figure a name".format(figure["plot"]))
     return "{}_{}_{}_{}.png".format(
         PLOT_LABELS[figure["plot"]], figure["tier1"], figure["tier2"],
         figure["run"],
@@ -107,9 +123,6 @@ def figure_name(figure):
 
 def _figure_source(figure, results_dir):
     """Return the plot file for a figure, checking it against its run."""
-    if figure["plot"] not in PLOT_LABELS:
-        raise ValueError("no label for plot {!r}; add it to PLOT_LABELS"
-                         .format(figure["plot"]))
     try:
         configuration = resolve_run_configuration(figure["run"])
     except KeyError:

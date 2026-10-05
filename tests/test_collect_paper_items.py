@@ -108,3 +108,20 @@ def test_tables_may_use_any_defined_macro(tmp_path):
         r"\QLowMstarPaperBoundsNeff"
     )
     assert collect.undefined_table_macros(plan) == {}
+
+
+def test_figures_may_set_their_own_name(tmp_path):
+    plan = collect.collection_plan(tmp_path)
+    assert plan[collect.Path("Figures/CDF_comparison.png")] == (
+        tmp_path / "mtrue" / "allstars" / "paper_bounds" / "plots" /
+        "cdf_comparison.png"
+    )
+
+
+def test_unnamed_figures_need_a_plot_label(tmp_path, monkeypatch):
+    monkeypatch.setattr(collect, "PAPER_FIGURES", [{
+        "plot": "unlabeled.png", "run": "paper_bounds",
+        "tier1": "mtrue", "tier2": "allstars",
+    }])
+    with pytest.raises(ValueError, match="PLOT_LABELS"):
+        collect.collection_plan(tmp_path)
