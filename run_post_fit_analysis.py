@@ -117,8 +117,14 @@ POST_FIT_PRODUCTS = {
         "legend_loc": "lower right",  # legend in each row's first panel
         "legend_fontsize": None,      # None: the ORD plots' legend size
         "panel_size": (5, 3.5),       # inches per panel
-        "colors": None,               # None: C0 for high, C1 for low
-        "band_alpha": 0.25,
+        "model_colors": None,         # None: model colors of the ORD plots
+                                      # (sigmoid green, logG tomato, ...)
+        "linestyles": ("-", "--"),    # high, low sample medians
+        "band_styles": ("fill", "outline"),  # high band shaded, low band
+                                      # drawn as edges
+        "band_alpha": 0.3,            # opacity of filled bands
+        "outline_style": ":",         # line style of outlined band edges
+        "outline_width": 1.2,
         "dpi": 300,
     },
 
