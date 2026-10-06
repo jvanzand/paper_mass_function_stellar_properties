@@ -42,6 +42,10 @@ POST_FIT_PRODUCTS = {
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
         "stack_dim": "a",
+        # High/low sample comparisons (ratios, shifts, significances) run
+        # high relative to low, except activity: old (lowAct) relative to
+        # young (highAct)
+        "low_first_comparisons": ["Act"],
     },
 
     # Main text: Model parameters for the full sample (references variables.tex)

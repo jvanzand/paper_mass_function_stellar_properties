@@ -84,6 +84,13 @@ Subset LaTeX commands carry their run's name with digits spelled out, so
 `stellar3params_Miyazaki` gives
 `\McStellarThreeParamsMiyazakiLowMstarLowFeHYoungNstars`.
 
+`variables.tex` also has a labeled section comparing every high/low sample
+pair (e.g. `highMstar` vs `lowMstar`) in each run: rates get a `Ratio`, log10
+locations (sigmoid center, logG mu) a `Diff` in dex and its `Factor`, widths a
+`Diff`, and every quantity a `Significance`, e.g.
+`\McMstarPaperBoundsSigmoidParamCenterFactorBinaZero`. Activity compares old
+relative to young.
+
 ## Collecting items for the paper
 
 `collect_paper_items.py` rebuilds `paper_items/` with every figure, table, and
