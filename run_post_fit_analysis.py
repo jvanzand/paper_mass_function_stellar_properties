@@ -112,7 +112,7 @@ POST_FIT_PRODUCTS = {
         "models": ["sigmoid", "logG"],          # one column each
         "sample_pairs": ["Mstar", "FeH", "Act"],  # one row each: high/low
         "run": "paper_bounds",
-        "tier1": "qtrue",
+        "tier1": "mtrue",
         # Optional settings (defaults shown):
         "row_labels": {},             # label centered above each row, by
                                       # sample pair; defaults: Stellar
@@ -158,8 +158,8 @@ POST_FIT_PRODUCTS = {
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-PRODUCTS_TO_MAKE = ["cdf_comparison"]
-#PRODUCTS_TO_MAKE = None
+#PRODUCTS_TO_MAKE = ["cdf_comparison"]
+PRODUCTS_TO_MAKE = None
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
