@@ -74,7 +74,7 @@ RUN_CONFIGURATIONS = {
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
-        "run_fits":True,
+        "run_fits":False,
         "make_plots":True,
     },
 
@@ -91,7 +91,7 @@ RUN_CONFIGURATIONS = {
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
-        "run_fits":True,
+        "run_fits":False,
         "make_plots":True,
     },
     
@@ -108,7 +108,7 @@ RUN_CONFIGURATIONS = {
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
-        "run_fits":True,
+        "run_fits":False,
         "make_plots":True,
     },
 
@@ -158,7 +158,7 @@ RUN_CONFIGURATIONS = {
 
         # Independent bins, like the binned rates of Cui et al. (2026)
         "piecewise_parameterization": "independent",
-        "run_fits":True,
+        "run_fits":False,
         "make_plots":True,
     },
 
@@ -168,7 +168,8 @@ RUN_CONFIGURATIONS = {
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
 #RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
-RUNS_TO_DO = ['Cui_comparison_discussion']
+#RUNS_TO_DO = ['Cui_comparison_discussion']
+RUNS_TO_DO = None
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
@@ -234,11 +235,9 @@ RUN_DEFAULTS = {
     "nsteps": 5000,
     "burnin": 2000,
     # Production and burn-in steps for the piecewise model alone; None uses
-    # nsteps/burnin. Piecewise chains mix more slowly than the smooth models
-    # (steps/tau ~ 25-35 at 5000 steps), so they may need more steps to reach
-    # the 50-tau convergence rule. Either can be overridden per run.
-    "piecewise_nsteps": None,
-    "piecewise_burnin": None,
+    # nsteps and burnin.
+    "piecewise_nsteps": 30000,
+    "piecewise_burnin": 5000,
     # Fits whose chains span fewer autocorrelation times than this are named
     # in a warning after each run; every experiment also gets
     # saved_chains/convergence.txt with per-parameter details.
