@@ -120,7 +120,8 @@ POST_FIT_PRODUCTS = {
         "labels": {},                 # legend text by sample, e.g.
                                       # {"highAct": "Young"}; others use
                                       # the config_dict.py sample titles
-        "title": "{model} CDF",       # heads each column; {model} -> name
+        "title": None,                # optional column heading, e.g.
+                                      # "{model} CDF"; None: untitled
         "credible": 0.68,             # shaded central posterior interval
         "stack_bin": 0,               # fitted stack bin
         "n_grid": 500,                # mass grid points across the bounds
