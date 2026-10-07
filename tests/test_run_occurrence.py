@@ -243,3 +243,12 @@ def test_runs_write_to_a_tier3_folder_named_after_themselves(monkeypatch):
 def test_configured_runs_are_named_after_their_folders():
     for name in run.RUN_CONFIGURATIONS:
         assert run.resolve_run_configuration(name)["tier3_list"] == [name]
+
+
+def test_piecewise_steps_are_checked_like_the_shared_steps(monkeypatch):
+    configuration = dict(run.resolve_run_configuration("stellar3params"))
+    run._validate_run_configuration("ok", dict(
+        configuration, piecewise_nsteps=15000, piecewise_burnin=5000))
+    with pytest.raises(ValueError, match="piecewise_burnin"):
+        run._validate_run_configuration("bad", dict(
+            configuration, piecewise_nsteps=1000, piecewise_burnin=2000))

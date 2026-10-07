@@ -233,6 +233,12 @@ RUN_DEFAULTS = {
     "nwalkers": 50,
     "nsteps": 5000,
     "burnin": 2000,
+    # Production and burn-in steps for the piecewise model alone; None uses
+    # nsteps/burnin. Piecewise chains mix more slowly than the smooth models
+    # (steps/tau ~ 25-35 at 5000 steps), so they may need more steps to reach
+    # the 50-tau convergence rule. Either can be overridden per run.
+    "piecewise_nsteps": None,
+    "piecewise_burnin": None,
     "random_seed": 1234,
     "parallel_fits": True,
     "parallel_mcmc": False,
@@ -527,8 +533,17 @@ def _validate_run_configuration(name, configuration):
             raise ValueError(
                 "{} {} must be strictly increasing".format(name, edge_name)
             )
-    if RUN_DEFAULTS["burnin"] >= RUN_DEFAULTS["nsteps"]:
-        raise ValueError("burnin must be smaller than nsteps")
+    settings = dict(RUN_DEFAULTS)
+    settings.update(configuration)
+    if settings["burnin"] >= settings["nsteps"]:
+        raise ValueError("{} burnin must be smaller than nsteps".format(name))
+    piecewise_nsteps = settings["piecewise_nsteps"] or settings["nsteps"]
+    piecewise_burnin = (settings["burnin"] if settings["piecewise_burnin"] is None
+                        else settings["piecewise_burnin"])
+    if piecewise_burnin >= piecewise_nsteps:
+        raise ValueError(
+            "{} piecewise_burnin must be smaller than piecewise_nsteps".format(name)
+        )
 
 
 def _print_plan(configurations, star_df, output_dir):
