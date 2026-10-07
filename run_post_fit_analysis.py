@@ -114,6 +114,9 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1": "qtrue",
         # Optional settings (defaults shown):
+        "row_labels": {},             # label along the right of each row,
+                                      # by sample pair; defaults: Stellar
+                                      # mass, Metallicity, Age
         "labels": {},                 # legend text by sample, e.g.
                                       # {"highAct": "Young"}; others use
                                       # the config_dict.py sample titles
@@ -226,6 +229,8 @@ def _check_subset(product_name, source, label, requested, available):
 
 
 CDF_FUNCTION = "plot_model_cdf_comparison"
+# Default row labels for CDF comparisons, by sample pair.
+CDF_ROW_LABELS = {"Mstar": "Stellar mass", "FeH": "Metallicity", "Act": "Age"}
 
 
 def _resolve_cdf_product(product_name, spec, results_dir):
@@ -263,6 +268,9 @@ def _resolve_cdf_product(product_name, spec, results_dir):
     labels = dict(spec.get("labels") or {})
     _check_subset(product_name, "its sample_pairs", "labels for",
                   list(labels), tier2_dirs)
+    row_labels = dict(spec.get("row_labels") or {})
+    _check_subset(product_name, "its sample_pairs", "row labels for",
+                  list(row_labels), pairs)
 
     _check_subset(product_name, "run {!r}".format(run_name),
                   "Tier 2 folders (for saving)", ["allstars"],
@@ -280,9 +288,12 @@ def _resolve_cdf_product(product_name, spec, results_dir):
         )
     arguments = {
         key: value for key, value in spec.items()
-        if key not in {"function", "sample_pairs", "run", "tier1", "labels"}
+        if key not in {"function", "sample_pairs", "run", "tier1", "labels",
+                       "row_labels"}
     }
     arguments.update(
+        row_labels=[row_labels.get(pair, CDF_ROW_LABELS.get(pair, pair))
+                    for pair in pairs],
         results_dir=Path(results_dir), name=product_name,
         rows=[[{"label": labels.get(tier2, tier2_df_cuts_dict[tier2][1]),
                 "t1": tier1, "t2": tier2, "t3": tier3}

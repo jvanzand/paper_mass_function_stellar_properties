@@ -300,3 +300,12 @@ def test_variables_include_standalone_samples(tmp_path, monkeypatch):
             in folders)
     assert tmp_path / "mtrue" / "allstars" / "paper_bounds" in folders
     assert arguments["standalone_tier2_dirs"] == ["Cui_cuts"]
+
+
+def test_cdf_rows_are_labeled_by_stellar_parameter(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(row_labels={"Act": "Stellar age"}))
+    _, arguments, _ = post_fit.resolve_product("cdf", tmp_path)
+    assert arguments["row_labels"] == ["Stellar mass", "Stellar age"]
+    _use_products(monkeypatch, cdf=_cdf_product(row_labels={"FeH": "x"}))
+    with pytest.raises(ValueError, match="FeH"):
+        post_fit.resolve_product("cdf", tmp_path)
