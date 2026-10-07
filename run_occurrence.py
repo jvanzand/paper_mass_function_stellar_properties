@@ -239,6 +239,10 @@ RUN_DEFAULTS = {
     # the 50-tau convergence rule. Either can be overridden per run.
     "piecewise_nsteps": None,
     "piecewise_burnin": None,
+    # Fits whose chains span fewer autocorrelation times than this are named
+    # in a warning after each run; every experiment also gets
+    # saved_chains/convergence.txt with per-parameter details.
+    "convergence_target": 50,
     "random_seed": 1234,
     "parallel_fits": True,
     "parallel_mcmc": False,

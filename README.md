@@ -53,6 +53,17 @@ Tier 2 directories are reused; delete one when its products should be
 regenerated. Tier 3 fits rerun and overwrite existing products whenever
 `run_fits=True`; use `plots_only=True` to reuse saved fits.
 
+## Convergence checks
+
+After fitting, each experiment's `saved_chains/convergence.txt` lists every
+sampled parameter's autocorrelation time and whether the chain spans at least
+`convergence_target` (default 50) of them, and the run ends with a warning
+naming any fits that do not. To check results that already exist:
+
+```bash
+python -c "from occurrence import convergence; convergence.summarize('results')"
+```
+
 ## Tables, variables, and summary plots
 
 `run_post_fit_analysis.py` builds the paper's LaTeX variables, tables, and
