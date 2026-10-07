@@ -61,7 +61,7 @@ sampled parameter's autocorrelation time and whether the chain spans at least
 naming any fits that do not. To check results that already exist:
 
 ```bash
-python -c "from occurrence import convergence; convergence.summarize('results')"
+python -c "import run_occurrence; from occurrence import convergence; convergence.summarize('results')"
 ```
 
 ## Tables, variables, and summary plots
