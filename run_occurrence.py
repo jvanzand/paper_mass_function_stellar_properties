@@ -145,13 +145,28 @@ RUN_CONFIGURATIONS = {
         "run_fits": False,
         "make_plots": True,
     },
+    
+    # Discussion: Cui+2026 comparison
+    "Cui_comparison_discussion": {
+        "tier1_list": ["mtrue"],
+        "tier2_list":['allstars'],
+        "tier3_list": ["Cui_comparison_discussion"],
+        "a_edges": [2, 20],
+        "m_edges": [5, 14, 24, 42],
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
+
+        "run_fits":True,
+        "make_plots":True,
+    },
 
 }
 
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
-RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
+#RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
+RUNS_TO_DO = ['Cui_comparison_discussion']
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
