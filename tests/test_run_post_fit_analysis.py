@@ -305,7 +305,7 @@ def test_variables_include_standalone_samples(tmp_path, monkeypatch):
 def test_cdf_rows_are_labeled_by_stellar_parameter(tmp_path, monkeypatch):
     _use_products(monkeypatch, cdf=_cdf_product(row_labels={"Act": "Stellar age"}))
     _, arguments, _ = post_fit.resolve_product("cdf", tmp_path)
-    assert arguments["row_labels"] == ["Stellar mass", "Stellar age"]
+    assert arguments["row_labels"] == ["Stellar Mass", "Stellar age"]
     _use_products(monkeypatch, cdf=_cdf_product(row_labels={"FeH": "x"}))
     with pytest.raises(ValueError, match="FeH"):
         post_fit.resolve_product("cdf", tmp_path)

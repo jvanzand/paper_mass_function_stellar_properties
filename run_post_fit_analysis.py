@@ -114,9 +114,9 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1": "qtrue",
         # Optional settings (defaults shown):
-        "row_labels": {},             # label along the right of each row,
-                                      # by sample pair; defaults: Stellar
-                                      # mass, Metallicity, Age
+        "row_labels": {},             # label centered above each row, by
+                                      # sample pair; defaults: Stellar
+                                      # Mass, Stellar Metallicity, Stellar Age
         "labels": {},                 # legend text by sample, e.g.
                                       # {"highAct": "Young"}; others use
                                       # the config_dict.py sample titles
@@ -230,7 +230,8 @@ def _check_subset(product_name, source, label, requested, available):
 
 CDF_FUNCTION = "plot_model_cdf_comparison"
 # Default row labels for CDF comparisons, by sample pair.
-CDF_ROW_LABELS = {"Mstar": "Stellar mass", "FeH": "Metallicity", "Act": "Age"}
+CDF_ROW_LABELS = {"Mstar": "Stellar Mass", "FeH": "Stellar Metallicity",
+                  "Act": "Stellar Age"}
 
 
 def _resolve_cdf_product(product_name, spec, results_dir):
