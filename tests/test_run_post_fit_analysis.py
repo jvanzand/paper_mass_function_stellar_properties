@@ -285,3 +285,18 @@ def test_cdf_products_need_a_full_sample_folder_to_save_into(tmp_path,
                                                 sample_pairs=["Mstar"]))
     with pytest.raises(ValueError, match="allstars"):
         post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_variables_include_standalone_samples(tmp_path, monkeypatch):
+    _use_products(monkeypatch, variables={
+        "function": "make_variables",
+        "runs": ["paper_bounds", "Cui_comparison_discussion"],
+        "tier1_dirs": ["mtrue"], "tier2_types": ["allstars"],
+        "standalone_tier2_dirs": ["Cui_cuts"],
+        "tier3_stack_dims": {"Cui_comparison_discussion": "m"},
+    })
+    _, arguments, folders = post_fit.resolve_product("variables", tmp_path)
+    assert (tmp_path / "mtrue" / "Cui_cuts" / "Cui_comparison_discussion"
+            in folders)
+    assert tmp_path / "mtrue" / "allstars" / "paper_bounds" in folders
+    assert arguments["standalone_tier2_dirs"] == ["Cui_cuts"]

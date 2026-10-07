@@ -37,11 +37,19 @@ POST_FIT_PRODUCTS = {
     # the three-parameter subsets. Each run contributes the samples it has.
     "variables": {
         "function": "make_variables",
-        "runs": ["paper_bounds", "paper_bounds_noGP"],
+        "runs": ["paper_bounds", "paper_bounds_noGP",
+                 "Cui_comparison_discussion"],
         "three_parameter_runs": ["stellar3params", "stellar3params_Miyazaki"],
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+        # Samples used as-is rather than expanded into high/low pairs
+        "standalone_tier2_dirs": ["Cui_cuts"],
         "stack_dim": "a",
+        # Runs whose per-bin statistics follow mass ("m") instead of
+        # separation, and runs whose integrated rates are quoted in percent:
+        # the Cui+2026 comparison needs rates for each mass bin in percent
+        "tier3_stack_dims": {"Cui_comparison_discussion": "m"},
+        "percent_tier3_dirs": ["Cui_comparison_discussion"],
         # High/low sample comparisons (ratios, shifts, significances) run
         # high relative to low, except activity: old (lowAct) relative to
         # young (highAct)
@@ -338,7 +346,9 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     if "t2" in arguments:
         tier2_dirs = [arguments["t2"]]
     elif "tier2_types" in arguments:
-        tier2_dirs = _expand_tier2_types(arguments["tier2_types"])
+        tier2_dirs = _expand_tier2_types(arguments["tier2_types"]) + [
+            tier2_dir for tier2_dir in arguments.get("standalone_tier2_dirs", [])
+        ]
     else:
         tier2_dirs = list(runs[0][1]["tier2_list"])
         if function_name in TIER2_DIRS_FUNCTIONS:

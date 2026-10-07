@@ -149,13 +149,15 @@ RUN_CONFIGURATIONS = {
     # Discussion: Cui+2026 comparison
     "Cui_comparison_discussion": {
         "tier1_list": ["mtrue"],
-        "tier2_list":['allstars'],
+        "tier2_list":['Cui_cuts'],
         "tier3_list": ["Cui_comparison_discussion"],
         "a_edges": [2, 20],
         "m_edges": [5, 14, 24, 42],
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
+        # Independent bins, like the binned rates of Cui et al. (2026)
+        "piecewise_parameterization": "independent",
         "run_fits":True,
         "make_plots":True,
     },

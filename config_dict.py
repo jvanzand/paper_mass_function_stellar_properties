@@ -16,6 +16,11 @@ SAMPLE_DEFINITIONS = {
         "logrhk <= -4.969 & 0.82 <= Mstar <= 1.21",
         r"Age $\geq$ 5.0 Gyr",
     ),
+    # Stellar mass range comparable to the FGK sample of Cui et al. (2026)
+    "Cui_cuts": (
+        "0.6 < Mstar < 1.4",
+        r"$0.6 < M_{\star} < 1.4 M_{\odot}$",
+    ),
 }
 
 
