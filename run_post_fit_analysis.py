@@ -176,6 +176,8 @@ POST_FIT_PRODUCTS = {
         "significance_pair": (0, 1),  # positions of the two samples in each
                                       # row (first minus second): high - low
         "significance_seed": 0,       # seeds the pairing of draws
+        "significance_threshold": 2,  # red dotted lines at +/- this value;
+                                      # None omits them
         "significance_height": 0.35,  # its height relative to a CDF panel
         "significance_ylabel": r"$\Delta/\sigma$",
         "outline_style": ":",         # line style of outlined band edges
