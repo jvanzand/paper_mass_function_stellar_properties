@@ -167,8 +167,15 @@ POST_FIT_PRODUCTS = {
         "hatch_linewidth": 0.6,       # width of the hatch lines
         "hatch_edge_width": 0.8,      # solid edges of hatched bands
         "significance_panel": True,   # panel above each CDF panel showing
-                                      # (median difference)/(facing 1-sigma
-                                      # errors in quadrature), first - second
+                                      # the pointwise significance of the
+                                      # difference between two samples
+        "significance_method": "draws",  # "draws": median/facing 1-sigma
+                                      # error of paired draw differences;
+                                      # "quadrature": median difference over
+                                      # both curves' errors in quadrature
+        "significance_pair": (0, 1),  # positions of the two samples in each
+                                      # row (first minus second): high - low
+        "significance_seed": 0,       # seeds the pairing of draws
         "significance_height": 0.35,  # its height relative to a CDF panel
         "significance_ylabel": r"$\Delta/\sigma$",
         "outline_style": ":",         # line style of outlined band edges
