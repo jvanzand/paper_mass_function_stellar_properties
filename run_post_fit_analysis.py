@@ -144,13 +144,13 @@ POST_FIT_PRODUCTS = {
         "dpi": 300,
     },
 
-#    # Optional: Mass-metallicity occurrence tables
-#   "two_param_tables": {
-#        "function": "make_two_parameter_tables",
-#        "run": "stellar2params",
-#        "t1": "mtrue",
-#        "use_latex_variables": False,
- #   },
+    # Optional: Mass-metallicity occurrence tables
+   "two_param_tables": {
+        "function": "make_two_parameter_tables",
+        "run": "stellar2params",
+        "t1": "mtrue",
+        "use_latex_variables": True,
+    },
 
 }
 
@@ -158,8 +158,8 @@ POST_FIT_PRODUCTS = {
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-#PRODUCTS_TO_MAKE = ["cdf_comparison"]
-PRODUCTS_TO_MAKE = None
+PRODUCTS_TO_MAKE = ["two_param_tables"]
+#PRODUCTS_TO_MAKE = None
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
