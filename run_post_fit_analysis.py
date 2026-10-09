@@ -156,10 +156,12 @@ POST_FIT_PRODUCTS = {
         "panel_size": (5, 3.5),       # inches per panel
         "model_colors": None,         # None: model colors of the ORD plots
                                       # (sigmoid green, logG tomato, ...)
-        "linestyles": ("-", "--"),    # high, low sample medians
-        "band_styles": ("fill", "outline"),  # high band shaded, low band
-                                      # drawn as edges
+        "linestyles": ("-", "-"),     # high, low sample medians
+        "band_styles": ("fill", "hatch"),  # high band shaded, low band
+                                      # hatched ("outline" draws edges)
         "band_alpha": 0.3,            # opacity of filled bands
+        "hatch": "////",              # hatch pattern of hatched bands
+        "hatch_alpha": 0.6,           # opacity of the hatch lines
         "outline_style": ":",         # line style of outlined band edges
         "outline_width": 1.2,
         "dpi": 300,
