@@ -30,7 +30,8 @@ from occurrence import post_fit_analysis as pfa
 # plot_model_cdf_comparison products instead list "models" (columns) and
 # "sample_pairs" (rows, e.g. "Mstar" for highMstar and lowMstar) from one run
 # and tier1; the product name becomes the figure name.
-# Every other key is passed through as a keyword argument.
+# Every other key is passed through as a keyword argument. Table notes live
+# here as "note" so they survive every regeneration of their tables.
 POST_FIT_PRODUCTS = {
 
     # LaTeX variables for the main results, the no-GP escarpment fits, and
@@ -86,6 +87,11 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "t1": "mtrue",
         "tier2_types": ["Mstar", "FeH"],
+        # Table note (LaTeX), kept here so regenerating the table keeps it
+        "note": (
+            r"Placeholder note text. Replace this with the final note for "
+            r"the one-parameter table."
+        ),
     },
 
     # Main text: Companions colored by host properties over the average completeness
