@@ -67,7 +67,9 @@ PAPER_FIGURES = [
     # run_post_fit_analysis.py's cdf_comparison product and saved with the
     # catalog plots
     {"plot": "cdf_comparison.png", "run": "paper_bounds", "tier1": "mtrue",
-     "tier2": "allstars", "name": "CDF_comparison.png"},
+     "tier2": "allstars", "name": "CDF_comparison_mtrue.png"},
+    {"plot": "cdf_comparison.png", "run": "paper_bounds", "tier1": "qtrue",
+     "tier2": "allstars", "name": "CDF_comparison_qtrue.png"},
 ]
 
 # Tables and variables the paper inputs: file in results/paper_tables/ mapped

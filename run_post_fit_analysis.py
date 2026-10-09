@@ -128,10 +128,10 @@ POST_FIT_PRODUCTS = {
     # Discussion: normalized CDFs of every model (columns) for every pair of
     # stellar samples (rows), saved with the catalog plots in
     # results/<tier1>/allstars/<run>/plots/<product name>.png
-    "cdf_comparison": {
+    "cdf_comparison_mtrue": {
         "function": "plot_model_cdf_comparison",
         "models": ["sigmoid", "logG"],          # one column each
-        "sample_pairs": ["Mstar", "FeH", "Act"],  # one row each: high/low
+        "sample_pairs": ["Mstar", "FeH"],  # one row each: high/low
         "run": "paper_bounds",
         "tier1": "mtrue",
         # Optional settings (defaults shown):
@@ -168,6 +168,13 @@ POST_FIT_PRODUCTS = {
         "outline_width": 1.2,
         "dpi": 300,
     },
+    "cdf_comparison_qtrue": {
+        "function": "plot_model_cdf_comparison",
+        "models": ["sigmoid", "logG"],          # one column each
+        "sample_pairs": ["Mstar", "FeH"],  # one row each: high/low
+        "run": "paper_bounds",
+        "tier1": "qtrue"
+    },
 
     # Discussion: Mass-metallicity occurrence tables over all 719 stars
     # (references variables.tex; needs "two_parameter_runs" there)
@@ -184,7 +191,7 @@ POST_FIT_PRODUCTS = {
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-PRODUCTS_TO_MAKE = ["two_param_tables"]
+PRODUCTS_TO_MAKE = ["cdf_comparison_qtrue"]
 #PRODUCTS_TO_MAKE = None
 
 
