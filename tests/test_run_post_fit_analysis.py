@@ -318,9 +318,9 @@ def test_variables_pass_two_parameter_runs_to_occurrence():
     assert any(folder.name == "stellar2params" for folder in folders)
 
 
-def test_one_parameter_tables_read_the_one_dimensional_fits():
-    function, arguments, folders = post_fit.resolve_product("one_param_tables")
-    assert function == "make_one_parameter_tables"
+def test_one_parameter_table_reads_the_one_dimensional_fits():
+    function, arguments, folders = post_fit.resolve_product("one_param_table")
+    assert function == "make_one_parameter_table"
     assert arguments["t3"] == "paper_bounds"
     assert arguments["tier2_types"] == ["Mstar", "FeH"]
     assert sorted(folder.parent.name for folder in folders) == [

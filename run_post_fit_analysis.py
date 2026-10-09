@@ -79,9 +79,10 @@ POST_FIT_PRODUCTS = {
     },
     
     # Results: Integrated occurrence of the high/low mass and metallicity
-    # samples from the 1D fits (references variables.tex)
-    "one_param_tables": {
-        "function": "make_one_parameter_tables",
+    # samples from the 1D fits, with each pair's significance and median
+    # ratio, in one table (references variables.tex)
+    "one_param_table": {
+        "function": "make_one_parameter_table",
         "run": "paper_bounds",
         "t1": "mtrue",
         "tier2_types": ["Mstar", "FeH"],
@@ -180,7 +181,7 @@ TIER3_ARGUMENTS = {
     "make_variables": "tier3_dirs",
     "make_parameter_table": "t3",
     "make_appendix_parameter_table": "t3",
-    "make_one_parameter_tables": "t3",
+    "make_one_parameter_table": "t3",
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",
     "plot_companions_by_stellar_parameter": "tier3_dirs",
