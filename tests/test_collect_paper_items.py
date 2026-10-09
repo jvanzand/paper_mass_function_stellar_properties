@@ -115,10 +115,12 @@ def test_tables_may_use_any_defined_macro(tmp_path):
 
 def test_figures_may_set_their_own_name(tmp_path):
     plan = collect.collection_plan(tmp_path)
-    assert plan[collect.Path("Figures/CDF_comparison.png")] == (
-        tmp_path / "mtrue" / "allstars" / "paper_bounds" / "plots" /
-        "cdf_comparison.png"
-    )
+    # Both tiers' CDF figures share a file name in their own plots folders.
+    for tier1 in ("mtrue", "qtrue"):
+        assert plan[collect.Path(f"Figures/CDF_comparison_{tier1}.png")] == (
+            tmp_path / tier1 / "allstars" / "paper_bounds" / "plots" /
+            "cdf_comparison.png"
+        )
 
 
 def test_unnamed_figures_need_a_plot_label(tmp_path, monkeypatch):

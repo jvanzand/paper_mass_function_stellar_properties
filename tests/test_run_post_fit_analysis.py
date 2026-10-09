@@ -199,7 +199,9 @@ def test_cdf_rows_are_high_and_low_sample_pairs(tmp_path, monkeypatch):
                                                                tmp_path)
 
     assert function_name == "plot_model_cdf_comparison"
-    assert arguments["name"] == "cdf"
+    # The file name does not follow the product name.
+    assert arguments["name"] == "cdf_comparison"
+    assert "filename" not in arguments
     assert arguments["models"] == ["sigmoid", "logG"]
     assert arguments["credible"] == 0.95
     assert [[curve["t2"] for curve in row] for row in arguments["rows"]] == [
@@ -326,3 +328,14 @@ def test_one_parameter_table_reads_the_one_dimensional_fits():
     assert sorted(folder.parent.name for folder in folders) == [
         "highFeH", "highMstar", "lowFeH", "lowMstar",
     ]
+
+
+def test_cdf_filename_sets_the_figure_name(tmp_path, monkeypatch):
+    _use_products(monkeypatch, cdf=_cdf_product(filename="cdf_q.png"),
+                  bare=_cdf_product(filename="cdf_bare"))
+    assert post_fit.resolve_product("cdf", tmp_path)[1]["name"] == "cdf_q"
+    assert post_fit.resolve_product("bare", tmp_path)[1]["name"] == "cdf_bare"
+    for bad in ("plots/cdf.png", "cdf.pdf", ""):
+        _use_products(monkeypatch, cdf=_cdf_product(filename=bad))
+        with pytest.raises(ValueError, match="filename"):
+            post_fit.resolve_product("cdf", tmp_path)

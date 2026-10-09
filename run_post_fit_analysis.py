@@ -29,7 +29,8 @@ from occurrence import post_fit_analysis as pfa
 # \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
 # plot_model_cdf_comparison products instead list "models" (columns) and
 # "sample_pairs" (rows, e.g. "Mstar" for highMstar and lowMstar) from one run
-# and tier1; the product name becomes the figure name.
+# and tier1, and save to "filename" (default cdf_comparison.png) in that
+# tier1's plots folder, independent of the product name.
 # Every other key is passed through as a keyword argument. Table notes live
 # here as "note" so they survive every regeneration of their tables.
 POST_FIT_PRODUCTS = {
@@ -127,7 +128,7 @@ POST_FIT_PRODUCTS = {
     
     # Discussion: normalized CDFs of every model (columns) for every pair of
     # stellar samples (rows), saved with the catalog plots in
-    # results/<tier1>/allstars/<run>/plots/<product name>.png
+    # results/<tier1>/allstars/<run>/plots/<filename>
     "cdf_comparison_mtrue": {
         "function": "plot_model_cdf_comparison",
         "models": ["sigmoid", "logG"],          # one column each
@@ -135,6 +136,7 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1": "mtrue",
         # Optional settings (defaults shown):
+        "filename": "cdf_comparison.png",  # saved in the tier1 plots folder
         "row_labels": {},             # label centered above each row, by
                                       # sample pair; defaults: Stellar
                                       # Mass, Stellar Metallicity, Stellar Age
@@ -173,7 +175,8 @@ POST_FIT_PRODUCTS = {
         "models": ["sigmoid", "logG"],          # one column each
         "sample_pairs": ["Mstar", "FeH"],  # one row each: high/low
         "run": "paper_bounds",
-        "tier1": "qtrue"
+        "tier1": "qtrue",
+        "filename": "cdf_comparison.png",
     },
 
     # Discussion: Mass-metallicity occurrence tables over all 719 stars
@@ -265,6 +268,9 @@ def _check_subset(product_name, source, label, requested, available):
 
 
 CDF_FUNCTION = "plot_model_cdf_comparison"
+# File a CDF figure is saved as, in its tier1's allstars plots folder, unless
+# the product sets "filename".
+CDF_DEFAULT_FILENAME = "cdf_comparison.png"
 # Default row labels for CDF comparisons, by sample pair.
 CDF_ROW_LABELS = {"Mstar": "Stellar Mass", "FeH": "Stellar Metallicity",
                   "Act": "Stellar Age"}
@@ -283,8 +289,13 @@ def _resolve_cdf_product(product_name, spec, results_dir):
     reserved = sorted({"results_dir", "name", "rows", "runs"} & set(spec))
     if reserved:
         raise ValueError("{} sets {}; rows come from sample_pairs and the "
-                         "product name is the figure name".format(
+                         "figure is named with filename".format(
                              product_name, reserved))
+    filename = Path(spec.get("filename", CDF_DEFAULT_FILENAME))
+    if (filename.name != str(filename) or not filename.stem or
+            filename.suffix not in {"", ".png"}):
+        raise ValueError("{}: filename must be a bare .png file name, not "
+                         "{!r}".format(product_name, str(filename)))
     missing = sorted({"models", "sample_pairs", "run", "tier1"} - set(spec))
     if missing:
         raise ValueError("{} must set {}".format(product_name, missing))
@@ -326,12 +337,12 @@ def _resolve_cdf_product(product_name, spec, results_dir):
     arguments = {
         key: value for key, value in spec.items()
         if key not in {"function", "sample_pairs", "run", "tier1", "labels",
-                       "row_labels"}
+                       "row_labels", "filename"}
     }
     arguments.update(
         row_labels=[row_labels.get(pair, CDF_ROW_LABELS.get(pair, pair))
                     for pair in pairs],
-        results_dir=Path(results_dir), name=product_name,
+        results_dir=Path(results_dir), name=filename.stem,
         rows=[[{"label": labels.get(tier2, tier2_df_cuts_dict[tier2][1]),
                 "t1": tier1, "t2": tier2, "t3": tier3}
                for tier2 in row] for row in rows],
