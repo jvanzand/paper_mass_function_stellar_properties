@@ -166,6 +166,11 @@ POST_FIT_PRODUCTS = {
         "hatch_alpha": 0.6,           # opacity of the hatch lines
         "hatch_linewidth": 0.6,       # width of the hatch lines
         "hatch_edge_width": 0.8,      # solid edges of hatched bands
+        "significance_panel": True,   # panel above each CDF panel showing
+                                      # (median difference)/(facing 1-sigma
+                                      # errors in quadrature), first - second
+        "significance_height": 0.35,  # its height relative to a CDF panel
+        "significance_ylabel": r"$\Delta/\sigma$",
         "outline_style": ":",         # line style of outlined band edges
         "outline_width": 1.2,
         "dpi": 300,
