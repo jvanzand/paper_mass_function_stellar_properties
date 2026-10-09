@@ -22,9 +22,9 @@ from occurrence import post_fit_analysis as pfa
 
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
 # "run" names the RUN_CONFIGURATIONS entry to read (make_variables takes a list,
-# "runs", and includes each run's own samples); "three_parameter_runs"
-# (make_variables only) lists the three-parameter runs whose subset statistics
-# are added to the variables file. Command names spell out the full results
+# "runs", and includes each run's own samples); "three_parameter_runs" and
+# "two_parameter_runs" (make_variables only) list the three- and
+# two-parameter runs whose subset statistics are added to the variables file. Command names spell out the full results
 # path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
 # \McStellarThreeParamsLowMstarLowFeHYoungNstars for the stellar3params subsets.
 # plot_model_cdf_comparison products instead list "models" (columns) and
@@ -40,6 +40,8 @@ POST_FIT_PRODUCTS = {
         "runs": ["paper_bounds", "paper_bounds_noGP",
                  "Cui_comparison_discussion"],
         "three_parameter_runs": ["stellar3params", "stellar3params_Miyazaki"],
+        # Mass-metallicity subsets for the two-parameter tables
+        "two_parameter_runs": ["stellar2params"],
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
         # Samples used as-is rather than expanded into high/low pairs
@@ -76,6 +78,15 @@ POST_FIT_PRODUCTS = {
         "occurrence_model": "piecewise",
     },
     
+    # Results: Integrated occurrence of the high/low mass and metallicity
+    # samples from the 1D fits (references variables.tex)
+    "one_param_tables": {
+        "function": "make_one_parameter_tables",
+        "run": "paper_bounds",
+        "t1": "mtrue",
+        "tier2_types": ["Mstar", "FeH"],
+    },
+
     # Main text: Companions colored by host properties over the average completeness
     "companion_plots": {
         "function": "plot_companions_by_stellar_parameter",
@@ -144,8 +155,9 @@ POST_FIT_PRODUCTS = {
         "dpi": 300,
     },
 
-    # Optional: Mass-metallicity occurrence tables
-   "two_param_tables": {
+    # Discussion: Mass-metallicity occurrence tables over all 719 stars
+    # (references variables.tex; needs "two_parameter_runs" there)
+    "two_param_tables": {
         "function": "make_two_parameter_tables",
         "run": "stellar2params",
         "t1": "mtrue",
@@ -168,6 +180,7 @@ TIER3_ARGUMENTS = {
     "make_variables": "tier3_dirs",
     "make_parameter_table": "t3",
     "make_appendix_parameter_table": "t3",
+    "make_one_parameter_tables": "t3",
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",
     "plot_companions_by_stellar_parameter": "tier3_dirs",
@@ -176,7 +189,8 @@ TIER3_ARGUMENTS = {
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
-PRODUCT_KEYS = {"function", "run", "runs", "three_parameter_runs"}
+PRODUCT_KEYS = {"function", "run", "runs", "three_parameter_runs",
+                "two_parameter_runs"}
 
 
 def _selected_product_names(product_names):
@@ -331,7 +345,8 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     if not run_names or len(set(run_names)) != len(run_names):
         raise ValueError("{} must list distinct runs".format(product_name))
     tier3_argument = TIER3_ARGUMENTS[function_name]
-    reserved = {tier3_argument, "results_dir", "three_parameter_t3"}
+    reserved = {tier3_argument, "results_dir", "three_parameter_t3",
+                "two_parameter_t3"}
     if function_name in TIER2_DIRS_FUNCTIONS:
         reserved.add("tier2_dirs")
     overridden = sorted(reserved & set(spec))
@@ -390,12 +405,13 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
             ))
         folders_read.extend(run_folders)
 
-    if "three_parameter_runs" in spec and function_name != "make_variables":
-        raise ValueError(
-            "{}: three_parameter_runs only applies to make_variables".format(
-                product_name
+    for key in ("three_parameter_runs", "two_parameter_runs"):
+        if key in spec and function_name != "make_variables":
+            raise ValueError(
+                "{}: {} only applies to make_variables".format(
+                    product_name, key
+                )
             )
-        )
     if function_name == "make_variables":
         # An empty list keeps occurrence from looking for a "stellar3params"
         # folder that this product did not ask for.
@@ -410,6 +426,16 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
                 for tier1 in tier1_dirs
                 if tier1 in three_configuration["tier1_list"]
                 for tier2 in three_configuration["tier2_list"]
+            )
+        arguments["two_parameter_t3"] = []
+        for two_run in spec.get("two_parameter_runs", []):
+            two_configuration, two_tier3 = _run_tier3(product_name, two_run)
+            arguments["two_parameter_t3"].append(two_tier3)
+            folders_read.extend(
+                Path(results_dir) / tier1 / tier2 / two_tier3
+                for tier1 in tier1_dirs
+                if tier1 in two_configuration["tier1_list"]
+                for tier2 in two_configuration["tier2_list"]
             )
     return function_name, arguments, folders_read
 

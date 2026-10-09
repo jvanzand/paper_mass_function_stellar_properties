@@ -26,9 +26,12 @@ def test_plan_reads_figures_from_each_run_folder(tmp_path):
     assert loglinear == (tmp_path / "mtrue" / "allstars" /
                          "paper_bounds_loglinear" / "plots" /
                          "occurrence_ORD.png")
-    assert plan[collect.Path("three_param_OR_table.tex")] == (
+    assert plan[collect.Path("two_param_OR_table.tex")] == (
         tmp_path / "paper_tables" /
-        "three_parameter_OR_mtrue_stellar3params.tex"
+        "two_parameter_OR_mtrue_stellar2params.tex"
+    )
+    assert plan[collect.Path("one_param_OR_table.tex")] == (
+        tmp_path / "paper_tables" / "one_parameter_OR_mtrue_paper_bounds.tex"
     )
 
 
@@ -104,7 +107,7 @@ def test_tables_may_use_any_defined_macro(tmp_path):
     plan[collect.Path("variables.tex")].write_text(
         r"\newcommand{\QLowMstarPaperBoundsNeff}{\ensuremath{3.1}}"
     )
-    plan[collect.Path("three_param_OR_table.tex")].write_text(
+    plan[collect.Path("two_param_OR_table.tex")].write_text(
         r"\QLowMstarPaperBoundsNeff"
     )
     assert collect.undefined_table_macros(plan) == {}

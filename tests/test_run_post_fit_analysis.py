@@ -309,3 +309,20 @@ def test_cdf_rows_are_labeled_by_stellar_parameter(tmp_path, monkeypatch):
     _use_products(monkeypatch, cdf=_cdf_product(row_labels={"FeH": "x"}))
     with pytest.raises(ValueError, match="FeH"):
         post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_variables_pass_two_parameter_runs_to_occurrence():
+    _, arguments, folders = post_fit.resolve_product("variables")
+    assert arguments["two_parameter_t3"] == ["stellar2params"]
+    assert "two_parameter_runs" not in arguments
+    assert any(folder.name == "stellar2params" for folder in folders)
+
+
+def test_one_parameter_tables_read_the_one_dimensional_fits():
+    function, arguments, folders = post_fit.resolve_product("one_param_tables")
+    assert function == "make_one_parameter_tables"
+    assert arguments["t3"] == "paper_bounds"
+    assert arguments["tier2_types"] == ["Mstar", "FeH"]
+    assert sorted(folder.parent.name for folder in folders) == [
+        "highFeH", "highMstar", "lowFeH", "lowMstar",
+    ]
