@@ -89,8 +89,11 @@ POST_FIT_PRODUCTS = {
         "tier2_types": ["Mstar", "FeH"],
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
-            r"Placeholder note text. Replace this with the final note for "
-            r"the one-parameter table."
+            r"The dividing values for stellar mass and metallicity are "
+            r"$1.0~\Msun$ and 0.0 dex, respectively. Occurrence rates have "
+            r"units of companions per star. The last column gives the ratio "
+            r"of the values of the relevant stellar parameter in the high and "
+            r"low samples."
         ),
     },
 
