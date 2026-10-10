@@ -14,8 +14,10 @@ Tier 2 choices are checked against that run before anything is made.
 
 from pathlib import Path
 
-from config_dict import tier2_df_cuts_dict
-from run_occurrence import RESULTS_DIR, resolve_run_configuration
+from config_dict import SAMPLE_DEFINITIONS, tier2_df_cuts_dict
+from run_occurrence import (
+    RESULTS_DIR, load_or_make_star_df, resolve_run_configuration,
+)
 
 from occurrence import post_fit_analysis as pfa
 
@@ -392,7 +394,7 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
         raise ValueError("{} must list distinct runs".format(product_name))
     tier3_argument = TIER3_ARGUMENTS[function_name]
     reserved = {tier3_argument, "results_dir", "three_parameter_t3",
-                "two_parameter_t3"}
+                "two_parameter_t3", "sample_queries", "sample_catalog"}
     if function_name in TIER2_DIRS_FUNCTIONS:
         reserved.add("tier2_dirs")
     overridden = sorted(reserved & set(spec))
@@ -459,6 +461,12 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
                 )
             )
     if function_name == "make_variables":
+        # Median stellar properties of every sample come from the catalog
+        # and sample queries the fits used.
+        arguments["sample_queries"] = {
+            name: query for name, (query, _) in SAMPLE_DEFINITIONS.items()
+        }
+        arguments["sample_catalog"] = load_or_make_star_df()
         # An empty list keeps occurrence from looking for a "stellar3params"
         # folder that this product did not ask for.
         arguments["three_parameter_t3"] = []
