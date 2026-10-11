@@ -92,11 +92,12 @@ POST_FIT_PRODUCTS = {
         "tier2_types": ["Mstar", "FeH"],
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
-            r"The dividing values for stellar mass and metallicity are "
-            r"$1.0~\Msun$ and 0.0 dex, respectively. Occurrence rates have "
-            r"units of companions per star. The last column gives the ratio "
-            r"of the values of the relevant stellar parameter in the high and "
-            r"low samples."
+            r"Stellar masses are given in $\Msun$ and metallicities are given in "
+            r"dex, with the dividing values for each at $1.0~\Msun$ and 0.0 dex, "
+            r"respectively. Occurrence rates have units of companions per star, "
+            r"and are calculated using the histogram model. The last two columns "
+            r"give the ratio between the median values of the listed stellar "
+            r"parameter in the two samples."
         ),
     },
 
@@ -115,6 +116,14 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+        # Table note (LaTeX), kept here so regenerating the table keeps it
+        "note": (
+            r"Stellar mass, metallicity, and age subsamples are divided at "
+            r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. Integrated "
+            r"occurrence rates have units of companions per star. We omit the "
+            r"integrated occurrence rate for the loglinear model because we fit "
+            r"it to only a subset of the catalog."
+        ),
     },
 
     # Discussion: Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
@@ -202,6 +211,17 @@ POST_FIT_PRODUCTS = {
         "run": "stellar2params",
         "t1": "mtrue",
         "use_latex_variables": True,
+        # Note on the reordered table (LaTeX), kept here so regenerating
+        # the table keeps it
+        "reordered_note": (
+            r"This table contains the same occurrence rates as Table "
+            r"\ref{tab:two_param_OR}, reordered to aid comparison across stellar "
+            r"parameters. Each row lists a fixed stellar parameter, the "
+            r"occurrence rate as a function of the parameter being tested, the "
+            r"statistical significance of the difference of those rates, and the "
+            r"ratio of median stellar mass and metallicity for the subsample in "
+            r"question."
+        ),
     },
 
 }
