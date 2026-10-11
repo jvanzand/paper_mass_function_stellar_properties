@@ -116,6 +116,19 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+        # The loglinear model is fit only for the full sample in true mass,
+        # to a subset of the mass range, so its integrated occurrence is
+        # not reliable
+        "model_samples": {"loglinear": [("mtrue", "allstars")]},
+        "omit_occurrence": ["loglinear"],
+        # Names shown in the first two columns
+        "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
+        "sample_labels": {
+            "allstars": "All Stars",
+            "highMstar": r"High $M_\star$", "lowMstar": r"Low $M_\star$",
+            "highFeH": "High [Fe/H]", "lowFeH": "Low [Fe/H]",
+            "highAct": "Young", "lowAct": "Old",
+        },
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
             r"Stellar mass, metallicity, and age subsamples are divided at "
