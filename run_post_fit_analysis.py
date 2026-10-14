@@ -81,6 +81,16 @@ POST_FIT_PRODUCTS = {
         "run": "stellar3params",
         "t1": "mtrue",
         "occurrence_model": "piecewise",
+        # Note on the reordered table (LaTeX), kept here so regenerating
+        # the table keeps it
+        "reordered_note": (
+            r"Analogous to Table \ref{tab:two_param_OR_reordered} for stellar "
+            r"mass, metallicity, and age. The last column indicates the ratio "
+            r"between the median values of the high and low subsamples indicated "
+            r"in each row. Dividing on three stellar parameters reduces the "
+            r"typical number of effective companions per sample to the point "
+            r"that none of the listed experiments exceed $3\sigma$ significance."
+        ),
     },
     
     # Results: Integrated occurrence of the high/low mass and metallicity
@@ -144,8 +154,10 @@ POST_FIT_PRODUCTS = {
             r"Stellar mass, metallicity, and age subsamples are divided at "
             r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. Integrated "
             r"occurrence rates have units of companions per star. We omit the "
-            r"integrated occurrence rate for the log-linear model because we fit "
-            r"it to only a subset of the catalog."
+            r"integrated occurrence rate and $\Delta$ BIC for the log-linear "
+            r"model because we fit it to only a subset of the catalog. We fit "
+            r"the escarpment model in only two experiments: the full sample in "
+            r"companion mass and the whole sample in mass ratio."
         ),
     },
 
