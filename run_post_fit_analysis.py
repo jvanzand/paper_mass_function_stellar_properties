@@ -24,7 +24,8 @@ from occurrence import post_fit_analysis as pfa
 
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
 # "run" names the RUN_CONFIGURATIONS entry to read (make_variables takes a list,
-# "runs", and includes each run's own samples); "three_parameter_runs" and
+# "runs", and includes each run's own samples); "model_runs" (appendix table
+# only) maps a model to the run its fits come from; "three_parameter_runs" and
 # "two_parameter_runs" (make_variables only) list the three- and
 # two-parameter runs whose subset statistics are added to the variables file. Command names spell out the full results
 # path: \McAllstarsPaperBoundsNstars for mtrue/allstars/paper_bounds, and
@@ -121,6 +122,10 @@ POST_FIT_PRODUCTS = {
         # not reliable
         "model_samples": {"loglinear": [("mtrue", "allstars")]},
         "omit_occurrence": ["loglinear"],
+        # Models fit in other runs, listed in the matching experiment's
+        # rows: the escarpment is fit without GP smoothing to the full
+        # samples in mass and mass ratio
+        "model_runs": {"escarpment": "paper_bounds_noGP"},
         # Names shown in the first two columns
         "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
         "sample_labels": {
@@ -263,7 +268,7 @@ TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
 PRODUCT_KEYS = {"function", "run", "runs", "three_parameter_runs",
-                "two_parameter_runs"}
+                "two_parameter_runs", "model_runs"}
 
 
 def _selected_product_names(product_names):
@@ -427,7 +432,8 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
         raise ValueError("{} must list distinct runs".format(product_name))
     tier3_argument = TIER3_ARGUMENTS[function_name]
     reserved = {tier3_argument, "results_dir", "three_parameter_t3",
-                "two_parameter_t3", "sample_queries", "sample_catalog"}
+                "two_parameter_t3", "sample_queries", "sample_catalog",
+                "model_tier3"}
     if function_name in TIER2_DIRS_FUNCTIONS:
         reserved.add("tier2_dirs")
     overridden = sorted(reserved & set(spec))
@@ -486,6 +492,27 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
             ))
         folders_read.extend(run_folders)
 
+    if "model_runs" in spec:
+        # Models whose fits come from another run, e.g. the escarpment
+        # from the no-GP run; their rows join the matching experiment
+        if function_name != "make_appendix_parameter_table":
+            raise ValueError(
+                "{}: model_runs only applies to "
+                "make_appendix_parameter_table".format(product_name)
+            )
+        arguments["model_tier3"] = {}
+        for model, model_run in spec["model_runs"].items():
+            model_configuration, model_tier3 = _run_tier3(
+                product_name, model_run
+            )
+            arguments["model_tier3"][model] = model_tier3
+            folders_read.extend(
+                Path(results_dir) / tier1 / tier2 / model_tier3
+                for tier1 in tier1_dirs
+                if tier1 in model_configuration["tier1_list"]
+                for tier2 in model_configuration["tier2_list"]
+                if tier2 in tier2_dirs
+            )
     for key in ("three_parameter_runs", "two_parameter_runs"):
         if key in spec and function_name != "make_variables":
             raise ValueError(

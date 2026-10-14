@@ -339,3 +339,12 @@ def test_cdf_filename_sets_the_figure_name(tmp_path, monkeypatch):
         _use_products(monkeypatch, cdf=_cdf_product(filename=bad))
         with pytest.raises(ValueError, match="filename"):
             post_fit.resolve_product("cdf", tmp_path)
+
+
+def test_appendix_table_takes_models_from_other_runs():
+    _, arguments, folders = post_fit.resolve_product("appendix_parameter_table")
+    assert arguments["model_tier3"] == {"escarpment": "paper_bounds_noGP"}
+    assert "model_runs" not in arguments
+    noGP = sorted((folder.parent.parent.name, folder.parent.name)
+                  for folder in folders if folder.name == "paper_bounds_noGP")
+    assert noGP == [("mtrue", "allstars"), ("qtrue", "allstars")]
