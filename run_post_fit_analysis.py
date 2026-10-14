@@ -126,6 +126,9 @@ POST_FIT_PRODUCTS = {
         # rows: the escarpment is fit without GP smoothing to the full
         # samples in mass and mass ratio
         "model_runs": {"escarpment": "paper_bounds_noGP"},
+        # Start the mass-ratio section on a new page, so no experiment's
+        # rows are split across pages
+        "tier1_page_breaks": True,
         # Names shown in the first two columns
         "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
         "sample_labels": {
