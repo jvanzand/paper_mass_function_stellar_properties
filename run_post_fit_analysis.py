@@ -122,6 +122,8 @@ POST_FIT_PRODUCTS = {
         # not reliable
         "model_samples": {"loglinear": [("mtrue", "allstars")]},
         "omit_occurrence": ["loglinear"],
+        # Its Delta BIC covers only that subset, so it is not comparable
+        "omit_delta_bic": ["loglinear"],
         # Models fit in other runs, listed in the matching experiment's
         # rows: the escarpment is fit without GP smoothing to the full
         # samples in mass and mass ratio

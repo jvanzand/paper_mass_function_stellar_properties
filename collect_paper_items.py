@@ -80,6 +80,10 @@ PAPER_TABLES = {
     "model_params_appendix_paper_bounds.tex": "model_params_table_appendix.tex",
     "one_parameter_OR_mtrue_paper_bounds.tex": "one_param_OR_table.tex",
     "two_parameter_OR_mtrue_stellar2params.tex": "two_param_OR_table.tex",
+    # Appendix: occurrence by stellar mass, metallicity, and age
+    "three_parameter_OR_mtrue_stellar3params.tex": "three_param_OR_table.tex",
+    "three_parameter_OR_reordered_mtrue_stellar3params.tex":
+        "three_param_OR_table_reordered.tex",
     "two_parameter_OR_reordered_mtrue_stellar2params.tex":
         "two_param_OR_table_reordered.tex",
 }
