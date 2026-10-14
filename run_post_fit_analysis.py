@@ -134,7 +134,7 @@ POST_FIT_PRODUCTS = {
             r"Stellar mass, metallicity, and age subsamples are divided at "
             r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. Integrated "
             r"occurrence rates have units of companions per star. We omit the "
-            r"integrated occurrence rate for the loglinear model because we fit "
+            r"integrated occurrence rate for the log-linear model because we fit "
             r"it to only a subset of the catalog."
         ),
     },
