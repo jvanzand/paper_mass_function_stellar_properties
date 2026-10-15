@@ -132,15 +132,7 @@ POST_FIT_PRODUCTS = {
             r"question."
         ),
     },
-    
-    # Main text: Mass-metallicity-age occurrence tables (references variables.tex)
-    "three_param_tables": {
-        "function": "make_three_parameter_tables",
-        "run": "stellar3params",
-        "t1": "mtrue",
-        "occurrence_model": "piecewise",
-    },
-    
+
 
     # Main text: Companions colored by host properties over the average completeness
     "companion_plots": {
