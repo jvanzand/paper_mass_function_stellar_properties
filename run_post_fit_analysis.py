@@ -75,6 +75,7 @@ POST_FIT_PRODUCTS = {
         "stack_dim": "a",
     },
     
+
     # Main text: Mass-metallicity-age occurrence tables (references variables.tex)
     "three_param_tables": {
         "function": "make_three_parameter_tables",
@@ -111,6 +112,35 @@ POST_FIT_PRODUCTS = {
             r"parameter in the two samples."
         ),
     },
+    
+    # Discussion: Mass-metallicity occurrence tables over all 719 stars
+    # (references variables.tex; needs "two_parameter_runs" there)
+    "two_param_tables": {
+        "function": "make_two_parameter_tables",
+        "run": "stellar2params",
+        "t1": "mtrue",
+        "use_latex_variables": True,
+        # Note on the reordered table (LaTeX), kept here so regenerating
+        # the table keeps it
+        "reordered_note": (
+            r"This table contains the same occurrence rates as Table "
+            r"\ref{tab:two_param_OR}, reordered to aid comparison across stellar "
+            r"parameters. Each row lists a fixed stellar parameter, the "
+            r"occurrence rate as a function of the parameter being tested, the "
+            r"statistical significance of the difference of those rates, and the "
+            r"ratio of median stellar mass and metallicity for the subsample in "
+            r"question."
+        ),
+    },
+    
+    # Main text: Mass-metallicity-age occurrence tables (references variables.tex)
+    "three_param_tables": {
+        "function": "make_three_parameter_tables",
+        "run": "stellar3params",
+        "t1": "mtrue",
+        "occurrence_model": "piecewise",
+    },
+    
 
     # Main text: Companions colored by host properties over the average completeness
     "companion_plots": {
@@ -249,33 +279,13 @@ POST_FIT_PRODUCTS = {
         "filename": "cdf_comparison.png",
     },
 
-    # Discussion: Mass-metallicity occurrence tables over all 719 stars
-    # (references variables.tex; needs "two_parameter_runs" there)
-    "two_param_tables": {
-        "function": "make_two_parameter_tables",
-        "run": "stellar2params",
-        "t1": "mtrue",
-        "use_latex_variables": True,
-        # Note on the reordered table (LaTeX), kept here so regenerating
-        # the table keeps it
-        "reordered_note": (
-            r"This table contains the same occurrence rates as Table "
-            r"\ref{tab:two_param_OR}, reordered to aid comparison across stellar "
-            r"parameters. Each row lists a fixed stellar parameter, the "
-            r"occurrence rate as a function of the parameter being tested, the "
-            r"statistical significance of the difference of those rates, and the "
-            r"ratio of median stellar mass and metallicity for the subsample in "
-            r"question."
-        ),
-    },
-
 }
 
 
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-PRODUCTS_TO_MAKE = ["cdf_comparison_qtrue"]
+PRODUCTS_TO_MAKE = ["appendix_parameter_table", "one_param_table", "two_param_tables"]
 #PRODUCTS_TO_MAKE = None
 
 
