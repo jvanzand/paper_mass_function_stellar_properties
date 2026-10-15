@@ -143,13 +143,12 @@ POST_FIT_PRODUCTS = {
         "stellar_parameters": ["Mstar", "FeH", "Age"],
     },
 
-    # Sample: histograms of host stellar properties ("Mstar", "FeH", and/or
-    # "Age"); a dashed line marks the high/low dividing value
+    # Sample: histograms of the full sample's stellar properties ("Mstar",
+    # "FeH", and/or "Age"), drawn from the star catalog rather than any run
+    # and saved in results/paper_figures; a dotted line marks the high/low
+    # dividing value
     "stellar_histograms": {
         "function": "plot_stellar_parameter_histograms",
-        "run": "paper_bounds",
-        "tier1_dirs": ["mtrue"],
-        "tier2_types": ["allstars"],
         "stellar_parameters": ["Mstar", "FeH", "Age"],
     },
 
@@ -291,13 +290,12 @@ TIER3_ARGUMENTS = {
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",
     "plot_companions_by_stellar_parameter": "tier3_dirs",
-    "plot_stellar_parameter_histograms": "tier3_dirs",
     "calculate_all_delta_bics": "tier3_dirs",
 }
 # Functions that select each sample's stars from the catalog themselves
-SAMPLE_CATALOG_FUNCTIONS = {
-    "make_variables", "plot_stellar_parameter_histograms",
-}
+SAMPLE_CATALOG_FUNCTIONS = {"make_variables"}
+# Plots the full sample from the star catalog; reads no results
+HISTOGRAM_FUNCTION = "plot_stellar_parameter_histograms"
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
@@ -448,11 +446,18 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     function_name = spec.get("function")
     if function_name == CDF_FUNCTION:
         return _resolve_cdf_product(product_name, spec, results_dir)
+    if function_name == HISTOGRAM_FUNCTION:
+        arguments = {
+            key: value for key, value in spec.items() if key != "function"
+        }
+        arguments["results_dir"] = Path(results_dir)
+        arguments["sample_catalog"] = load_or_make_star_df()
+        return function_name, arguments, []
     if function_name not in TIER3_ARGUMENTS:
         raise ValueError("{} uses unsupported function {!r}; supported: "
                          "{}".format(product_name, function_name,
                                      sorted(set(TIER3_ARGUMENTS) |
-                                            {CDF_FUNCTION})))
+                                            {CDF_FUNCTION, HISTOGRAM_FUNCTION})))
     run_key = "runs" if function_name == "make_variables" else "run"
     other_key = "run" if run_key == "runs" else "runs"
     if run_key not in spec or other_key in spec:

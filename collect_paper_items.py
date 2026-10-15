@@ -8,8 +8,10 @@ paper, for example::
     rsync -a paper_items/ /path/to/latex_project/
 
 Figures come from experiment ``plots`` folders written by
-``run_occurrence.py``; tables and variables come from ``results/paper_tables/``
-written by ``run_post_fit_analysis.py``. Every source is checked before
+``run_occurrence.py``, and whole-sample figures (the stellar histograms) from
+``results/paper_figures/``; tables and variables come from
+``results/paper_tables/``. Both results folders are written by
+``run_post_fit_analysis.py``. Every source is checked before
 anything is copied, so a collection is never left half-updated, and every
 results macro a collected table uses must be defined in ``variables.tex``.
 """
@@ -20,7 +22,9 @@ from pathlib import Path
 
 from run_occurrence import PROJECT_DIR, RESULTS_DIR, resolve_run_configuration
 
-from occurrence.post_fit_analysis import PAPER_TABLES_DIRNAME
+from occurrence.post_fit_analysis import (
+    PAPER_FIGURES_DIRNAME, PAPER_TABLES_DIRNAME,
+)
 
 
 PAPER_ITEMS_DIR = PROJECT_DIR / "paper_items"
@@ -33,9 +37,6 @@ PLOT_LABELS = {
     "companions_by_mstar.png": "companions_Mstar",
     "companions_by_feh.png": "companions_FeH",
     "companions_by_age.png": "companions_Age",
-    "stellar_hist_mstar.png": "hist_Mstar",
-    "stellar_hist_feh.png": "hist_FeH",
-    "stellar_hist_age.png": "hist_Age",
 }
 
 
@@ -59,11 +60,6 @@ PAPER_FIGURES = [
     *_figures("companions_by_mstar.png", "paper_bounds", "mtrue", ["allstars"]),
     *_figures("companions_by_feh.png", "paper_bounds", "mtrue", ["allstars"]),
     *_figures("companions_by_age.png", "paper_bounds", "mtrue", ["allstars"]),
-    # Sample: stellar property histograms (stellar_histograms product in
-    # run_post_fit_analysis.py); uncomment to include them in the paper
-    # *_figures("stellar_hist_mstar.png", "paper_bounds", "mtrue", ["allstars"]),
-    # *_figures("stellar_hist_feh.png", "paper_bounds", "mtrue", ["allstars"]),
-    # *_figures("stellar_hist_age.png", "paper_bounds", "mtrue", ["allstars"]),
     # Discussion: loglinear fit and mass-ratio functions
     *_figures("occurrence_ORD.png", "paper_bounds_loglinear", "mtrue",
               ["allstars"]),
@@ -79,6 +75,15 @@ PAPER_FIGURES = [
     {"plot": "cdf_comparison.png", "run": "paper_bounds", "tier1": "qtrue",
      "tier2": "allstars", "name": "CDF_comparison_qtrue.png"},
 ]
+
+# Figures of the whole sample, not tied to any run: file in
+# results/paper_figures/ (written by run_post_fit_analysis.py's
+# stellar_histograms product) mapped to its name in Figures/.
+PAPER_SAMPLE_FIGURES = {
+    "stellar_hist_mstar.png": "hist_Mstar.png",
+    "stellar_hist_feh.png": "hist_FeH.png",
+    "stellar_hist_age.png": "hist_Age.png",
+}
 
 # Tables and variables the paper inputs: file in results/paper_tables/ mapped
 # to the name the LaTeX project uses.
@@ -164,6 +169,12 @@ def collection_plan(results_dir=RESULTS_DIR):
         if destination in plan:
             raise ValueError("two figures are named {}".format(destination))
         plan[destination] = _figure_source(figure, results_dir)
+    sample_figures_dir = Path(results_dir) / PAPER_FIGURES_DIRNAME
+    for source_name, destination_name in PAPER_SAMPLE_FIGURES.items():
+        destination = Path(FIGURES_DIRNAME) / destination_name
+        if destination in plan:
+            raise ValueError("two figures are named {}".format(destination))
+        plan[destination] = sample_figures_dir / source_name
     tables_dir = Path(results_dir) / PAPER_TABLES_DIRNAME
     for source_name, destination_name in PAPER_TABLES.items():
         destination = Path(destination_name)
