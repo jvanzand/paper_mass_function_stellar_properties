@@ -33,6 +33,9 @@ PLOT_LABELS = {
     "companions_by_mstar.png": "companions_Mstar",
     "companions_by_feh.png": "companions_FeH",
     "companions_by_age.png": "companions_Age",
+    "stellar_hist_mstar.png": "hist_Mstar",
+    "stellar_hist_feh.png": "hist_FeH",
+    "stellar_hist_age.png": "hist_Age",
 }
 
 
@@ -56,6 +59,11 @@ PAPER_FIGURES = [
     *_figures("companions_by_mstar.png", "paper_bounds", "mtrue", ["allstars"]),
     *_figures("companions_by_feh.png", "paper_bounds", "mtrue", ["allstars"]),
     *_figures("companions_by_age.png", "paper_bounds", "mtrue", ["allstars"]),
+    # Sample: stellar property histograms (stellar_histograms product in
+    # run_post_fit_analysis.py); uncomment to include them in the paper
+    # *_figures("stellar_hist_mstar.png", "paper_bounds", "mtrue", ["allstars"]),
+    # *_figures("stellar_hist_feh.png", "paper_bounds", "mtrue", ["allstars"]),
+    # *_figures("stellar_hist_age.png", "paper_bounds", "mtrue", ["allstars"]),
     # Discussion: loglinear fit and mass-ratio functions
     *_figures("occurrence_ORD.png", "paper_bounds_loglinear", "mtrue",
               ["allstars"]),

@@ -121,6 +121,16 @@ POST_FIT_PRODUCTS = {
         "stellar_parameters": ["Mstar", "FeH", "Age"],
     },
 
+    # Sample: histograms of host stellar properties ("Mstar", "FeH", and/or
+    # "Age"); a dashed line marks the high/low dividing value
+    "stellar_histograms": {
+        "function": "plot_stellar_parameter_histograms",
+        "run": "paper_bounds",
+        "tier1_dirs": ["mtrue"],
+        "tier2_types": ["allstars"],
+        "stellar_parameters": ["Mstar", "FeH", "Age"],
+    },
+
     # Appendix: Model parameters for every sample (references variables.tex)
     "appendix_parameter_table": {
         "function": "make_appendix_parameter_table",
@@ -203,7 +213,7 @@ POST_FIT_PRODUCTS = {
         "legend_fontsize": None,      # None: the ORD plots' legend size
         "panel_size": (5, 3.5),       # inches per panel
         "model_colors": None,         # None: model colors of the ORD plots
-                                      # (sigmoid green, logG tomato, ...)
+                                      # (sigmoid blue, logG tomato, ...)
         "linestyles": ("-", "--"),    # high, low sample medians
         "band_styles": ("fill", "hatch"),  # high band shaded, low band
                                       # hatched ("outline" draws edges)
@@ -279,7 +289,12 @@ TIER3_ARGUMENTS = {
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",
     "plot_companions_by_stellar_parameter": "tier3_dirs",
+    "plot_stellar_parameter_histograms": "tier3_dirs",
     "calculate_all_delta_bics": "tier3_dirs",
+}
+# Functions that select each sample's stars from the catalog themselves
+SAMPLE_CATALOG_FUNCTIONS = {
+    "make_variables", "plot_stellar_parameter_histograms",
 }
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
@@ -537,13 +552,14 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
                     product_name, key
                 )
             )
-    if function_name == "make_variables":
-        # Median stellar properties of every sample come from the catalog
-        # and sample queries the fits used.
+    if function_name in SAMPLE_CATALOG_FUNCTIONS:
+        # Stellar properties of every sample come from the catalog and
+        # sample queries the fits used.
         arguments["sample_queries"] = {
             name: query for name, (query, _) in SAMPLE_DEFINITIONS.items()
         }
         arguments["sample_catalog"] = load_or_make_star_df()
+    if function_name == "make_variables":
         # An empty list keeps occurrence from looking for a "stellar3params"
         # folder that this product did not ask for.
         arguments["three_parameter_t3"] = []
