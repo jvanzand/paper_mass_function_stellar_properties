@@ -109,7 +109,8 @@ POST_FIT_PRODUCTS = {
             r"respectively. Occurrence rates have units of companions per star, "
             r"and are calculated using the histogram model. The last two columns "
             r"give the ratio between the median values of the listed stellar "
-            r"parameter in the two samples."
+            r"parameter in the two samples. For metallicity, the ratios are "
+            r"between linear abundances, $10^{\Delta[\text{Fe/H}]}$."
         ),
     },
     
@@ -130,6 +131,12 @@ POST_FIT_PRODUCTS = {
             r"statistical significance of the difference of those rates, and the "
             r"ratio of median stellar mass and metallicity for the subsample in "
             r"question."
+        ),
+        # Note on the original table (LaTeX)
+        "original_note": (
+            r"Analogous to Table \ref{tab:one_param_OR}, controlling for both "
+            r"mass and metallicity. We use the same mass and metallicity "
+            r"divisions at $1.0~\Msun$ and 0.0 dex, respectively."
         ),
     },
 
