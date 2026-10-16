@@ -195,7 +195,8 @@ POST_FIT_PRODUCTS = {
             r"integrated occurrence rate and $\Delta$ BIC for the log-linear "
             r"model because we fit it to only a subset of the catalog. We fit "
             r"the escarpment model in only two experiments: the full sample in "
-            r"companion mass and the whole sample in mass ratio."
+            r"companion mass and the whole sample in mass ratio. In both cases, "
+            r"we removed GP smoothing."
         ),
     },
 
