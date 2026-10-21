@@ -53,6 +53,17 @@ Tier 2 directories are reused; delete one when its products should be
 regenerated. Tier 3 fits rerun and overwrite existing products whenever
 `run_fits=True`; use `plots_only=True` to reuse saved fits.
 
+## Console output
+
+While a run executes, each finished experiment prints one line with every
+fit's convergence (in autocorrelation times) and the experiment's time. Each
+`run_multiple` call then prints a table with one row per fit (steps, largest
+autocorrelation time, slowest parameter, steps needed, fit time) and, for any
+short fits, the `nsteps` or `piecewise_nsteps` value that would bring them to
+the target. The full results of the latest `main()` call, including every
+parameter's autocorrelation time and all output paths, are saved in
+`results/run_summary.json`.
+
 ## Convergence checks
 
 After fitting, each experiment's `saved_chains/convergence.txt` lists every

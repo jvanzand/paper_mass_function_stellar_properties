@@ -28,6 +28,8 @@ STAR_CATALOG = PROJECT_DIR / "data" / "derived" / "star_catalog.json"
 LOCAL_PATHS_FILE = PROJECT_DIR / "local_paths.json"
 LOCAL_PATHS_EXAMPLE = PROJECT_DIR / "local_paths.example.json"
 LOCAL_PATH_KEYS = ("recoveries_dir", "posteriors_dir")
+# Full results of the latest main() call, written beneath the output directory
+RUN_SUMMARY_NAME = "run_summary.json"
 
 # occurrence is currently a sibling checkout rather than an installed package.
 if str(OCCURRENCE_DIR.parent) not in sys.path:
@@ -661,11 +663,27 @@ def main(
             arguments["run_fits"] = False
         results.extend(occurrence_run.run_multiple(**arguments))
 
+    write_run_summary(results, output_dir / RUN_SUMMARY_NAME)
     return results
 
 
+def write_run_summary(results, path):
+    """Save every experiment's full results (paths, chains, convergence).
+
+    The console shows only progress lines and a convergence table; this file
+    keeps the details. It is rewritten by each call of :func:`main`.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w") as stream:
+        json.dump(results, stream, indent=2, default=str)
+        stream.write("\n")
+    print("Full results: {}".format(path))
+    return path
+
+
 if __name__ == "__main__":
-    print(main(run_names=RUNS_TO_DO))
+    main(run_names=RUNS_TO_DO)
     
     
     

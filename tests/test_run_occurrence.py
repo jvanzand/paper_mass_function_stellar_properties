@@ -37,6 +37,9 @@ def test_validate_only_does_not_call_occurrence_runner(monkeypatch):
         "run_multiple",
         lambda **kwargs: (_ for _ in ()).throw(AssertionError("runner called")),
     )
+    # Runs that reuse fits need their source run's results, which this
+    # check does not depend on
+    monkeypatch.setattr(run, "_check_reused_fits", lambda *args: None)
 
     assert run.main(validate_only=True) == []
 
@@ -252,3 +255,13 @@ def test_piecewise_steps_are_checked_like_the_shared_steps(monkeypatch):
     with pytest.raises(ValueError, match="piecewise_burnin"):
         run._validate_run_configuration("bad", dict(
             configuration, piecewise_nsteps=1000, piecewise_burnin=2000))
+
+
+def test_run_summary_keeps_full_results(tmp_path, capsys):
+    results = [{"tier1": "mtrue", "chains": {"piecewise": tmp_path / "c.npz"},
+                "convergence": [{"parameters": [("bin 0", 10.0, 60.0)]}]}]
+    path = run.write_run_summary(results, tmp_path / "out" / "summary.json")
+    saved = json.loads(path.read_text())
+    assert saved[0]["chains"]["piecewise"] == str(tmp_path / "c.npz")
+    assert saved[0]["convergence"][0]["parameters"] == [["bin 0", 10.0, 60.0]]
+    assert "Full results:" in capsys.readouterr().out
