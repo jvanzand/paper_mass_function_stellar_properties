@@ -12,6 +12,11 @@ so its Tier 3 folder comes from the run configuration and its Tier 1 and
 Tier 2 choices are checked against that run before anything is made.
 """
 
+import contextlib
+import io
+import json
+import re
+import time
 from pathlib import Path
 
 from config_dict import SAMPLE_DEFINITIONS, tier2_df_cuts_dict
@@ -20,6 +25,10 @@ from run_occurrence import (
 )
 
 from occurrence import post_fit_analysis as pfa
+from occurrence.convergence import format_duration
+
+# Full return values of the latest main() call, beside the paper tables
+POST_FIT_SUMMARY_NAME = "post_fit_summary.json"
 
 
 # Each entry becomes one call to ``occurrence.post_fit_analysis.<function>``.
@@ -610,6 +619,68 @@ def _check_folders_exist(product_name, paths_read):
         )
 
 
+def _output_paths(value):
+    """Return every file path in a product function's return value."""
+    if isinstance(value, (str, Path)):
+        return [Path(value)]
+    if isinstance(value, dict):
+        return [path for item in value.values() for path in _output_paths(item)]
+    if isinstance(value, (list, tuple)):
+        return [path for item in value for path in _output_paths(item)]
+    return []
+
+
+def _describe_output(value, results_dir):
+    """Name a product's output files relative to the results directory."""
+    paths = []
+    for path in _output_paths(value):
+        try:
+            paths.append(path.relative_to(results_dir))
+        except ValueError:
+            paths.append(path)
+    if not paths:
+        return "done"
+    if len(paths) == 1:
+        return str(paths[0])
+    parents = {path.parent for path in paths}
+    if len(parents) == 1:
+        return "{} files in {}/".format(len(paths), parents.pop())
+    return "{} files in {} folders".format(len(paths), len(parents))
+
+
+def _variables_report(changes, previous_existed):
+    """Summarize how variables.tex changed relative to the version it replaced."""
+    if not previous_existed:
+        return ["variables.tex: {} commands (new file)".format(
+            changes["commands"]
+        )]
+    if not (changes["added"] or changes["removed"] or changes["changed"]):
+        return ["variables.tex: unchanged ({} commands)".format(
+            changes["commands"]
+        )]
+    lines = ["variables.tex: {} commands; {} new, {} removed, {} values "
+             "changed".format(changes["commands"], len(changes["added"]),
+                              len(changes["removed"]),
+                              len(changes["changed"]))]
+    if changes["largest"]:
+        lines.append("  Largest changes:")
+        lines.extend("    \\{}: {} -> {}".format(name, old, new)
+                     for name, old, new in changes["largest"])
+    return lines
+
+
+def write_post_fit_summary(outputs, variables, warnings, path):
+    """Save every product's outputs, the variables changes, and warnings."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    summary = {"outputs": outputs, "variables_changes": variables,
+               "warnings": warnings}
+    with path.open("w") as stream:
+        json.dump(summary, stream, indent=2, default=str)
+        stream.write("\n")
+    return path
+
+
 def main(product_names=None, results_dir=RESULTS_DIR, dry_run=False):
     """Validate and make the selected post-fit products.
 
@@ -617,6 +688,11 @@ def main(product_names=None, results_dir=RESULTS_DIR, dry_run=False):
     ``PRODUCTS_TO_MAKE`` is used, and ``None`` there means every product.
     Every selected product is checked, including that its results exist,
     before any is made. ``dry_run`` stops after those checks.
+
+    Each finished product prints one line naming its outputs and time.
+    Messages from ``occurrence`` are collected and printed together as
+    warnings at the end, after a report of how variables.tex changed. The
+    full return values go to ``results/paper_tables/post_fit_summary.json``.
     """
     names = _selected_product_names(product_names)
     resolved = {
@@ -625,19 +701,68 @@ def main(product_names=None, results_dir=RESULTS_DIR, dry_run=False):
     for name, (_, _, folders_read) in resolved.items():
         _check_folders_exist(name, folders_read)
 
-    print("Results: {}".format(results_dir))
-    for name, (function_name, arguments, folders_read) in resolved.items():
-        print("{}: {} from {} result folders".format(
-            name, function_name, len(folders_read)
-        ))
     if dry_run:
+        print("Results: {}".format(results_dir))
+        for name, (function_name, arguments, folders_read) in resolved.items():
+            print("{}: {} from {} result folders".format(
+                name, function_name, len(folders_read)
+            ))
         return {}
 
+    results_dir = Path(results_dir)
+    tables_dir = results_dir / pfa.PAPER_TABLES_DIRNAME
+    variables_path = tables_dir / "variables.tex"
+    previous_variables = (variables_path.read_text()
+                          if variables_path.is_file() else None)
+    variables = None
     outputs = {}
-    for name, (function_name, arguments, _) in resolved.items():
-        outputs[name] = getattr(pfa, function_name)(**arguments)
+    warnings = []
+    start = time.perf_counter()
+    width = max(len(name) for name in resolved)
+    count_width = len(str(len(resolved)))
+    for index, (name, (function_name, arguments, _)) in enumerate(
+            resolved.items(), 1):
+        product_start = time.perf_counter()
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            outputs[name] = getattr(pfa, function_name)(**arguments)
+        # Plot helpers announce every saved file; the product line names them
+        warnings.extend(
+            "{}: {}".format(name, re.sub(
+                r"^post_fit_analysis\.[a-z_]+: ", "", line.strip()
+            ))
+            for line in captured.getvalue().splitlines()
+            if line.strip() and "saved to" not in line
+        )
+        description = _describe_output(outputs[name], results_dir)
+        if function_name == "make_variables":
+            variables = pfa.variables_changes(
+                previous_variables or "", variables_path.read_text()
+            )
+            description += " ({} commands)".format(variables["commands"])
+        print("[{:>{}}/{}] {:<{}}  {:>8}  {}".format(
+            index, count_width, len(resolved), name, width,
+            format_duration(time.perf_counter() - product_start), description,
+        ), flush=True)
+
+    if variables is not None:
+        print("\n".join([""] + _variables_report(
+            variables, previous_variables is not None
+        )))
+    if warnings:
+        print("\nWarnings:")
+        print("\n".join("  " + warning for warning in warnings))
+    summary_path = write_post_fit_summary(
+        outputs, variables, warnings, tables_dir / POST_FIT_SUMMARY_NAME
+    )
+    print("\nMade {} products in {} ({} warning{}). Full results: {}".format(
+        len(outputs), format_duration(time.perf_counter() - start),
+        len(warnings), "" if len(warnings) == 1 else "s",
+        summary_path.relative_to(results_dir),
+    ))
+    print("Next: python collect_paper_items.py")
     return outputs
 
 
 if __name__ == "__main__":
-    print(main())
+    main()

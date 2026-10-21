@@ -96,6 +96,12 @@ option is listed in the product, and the figure goes to
 `results/<tier1>/allstars/<run>/plots/cdf_comparison.png`, next to the
 catalog plots.
 
+Each finished product prints one line with its time and output files
+(relative to `results/`). The run then reports how `variables.tex` changed
+from the version it replaced (new, removed, and changed commands, with the
+largest changes), lists any warnings from `occurrence` together, and saves
+the full return values to `results/paper_tables/post_fit_summary.json`.
+
 Products stop with a message naming the missing result folders if their runs
 have not been completed. Outputs go to `results/paper_tables/`; plots go to the
 matching experiment's `plots` folder. It needs only `results/`, not the

@@ -348,3 +348,54 @@ def test_appendix_table_takes_models_from_other_runs():
     noGP = sorted((folder.parent.parent.name, folder.parent.name)
                   for folder in folders if folder.name == "paper_bounds_noGP")
     assert noGP == [("mtrue", "allstars"), ("qtrue", "allstars")]
+
+
+def test_main_prints_one_line_per_product_and_collects_warnings(
+        tmp_path, monkeypatch, capsys):
+    _use_products(monkeypatch, variables={
+        "function": "make_variables", "runs": ["stellar2params"],
+        "tier1_dirs": ["mtrue"], "tier2_types": [],
+        "standalone_tier2_dirs": ["highMstarhighFeH"],
+    })
+    (tmp_path / "mtrue" / "highMstarhighFeH" / "stellar2params").mkdir(
+        parents=True)
+    tables = tmp_path / "paper_tables"
+    tables.mkdir()
+    (tables / "variables.tex").write_text(
+        "\\newcommand{\\McX}{\\ensuremath{0.30}}\n"
+        "\\newcommand{\\McGone}{\\ensuremath{1}}\n"
+    )
+
+    def fake_make_variables(**kwargs):
+        print("post_fit_analysis.make_variables: skipped experiments: x")
+        print("Corner plot saved to: somewhere.png")
+        path = kwargs["results_dir"] / "paper_tables" / "variables.tex"
+        path.write_text("\\newcommand{\\McX}{\\ensuremath{0.45}}\n"
+                        "\\newcommand{\\McNew}{\\ensuremath{2}}\n")
+        return path
+
+    monkeypatch.setattr(post_fit.pfa, "make_variables", fake_make_variables)
+    post_fit.main(["variables"], results_dir=tmp_path)
+    output = capsys.readouterr().out
+
+    product_line = next(line for line in output.splitlines()
+                        if line.startswith("[1/1] variables"))
+    assert product_line.endswith("  paper_tables/variables.tex (2 commands)")
+    assert "saved to" not in output
+    assert ("variables.tex: 2 commands; 1 new, 1 removed, 1 values changed"
+            in output)
+    assert "\\McX: 0.30 -> 0.45" in output
+    assert "Warnings:\n  variables: skipped experiments: x" in output
+    assert "Made 1 products in" in output and "(1 warning)" in output
+    summary = post_fit.json.loads(
+        (tables / post_fit.POST_FIT_SUMMARY_NAME).read_text())
+    assert summary["variables_changes"]["added"] == ["McNew"]
+    assert summary["outputs"]["variables"].endswith("variables.tex")
+
+
+def test_outputs_are_described_relative_to_the_results(tmp_path):
+    plots = tmp_path / "mtrue" / "allstars" / "run" / "plots"
+    described = post_fit._describe_output(
+        {"a": plots / "one.png", "b": {"c": plots / "two.png"}}, tmp_path)
+    assert described == "2 files in mtrue/allstars/run/plots/"
+    assert post_fit._describe_output(None, tmp_path) == "done"
