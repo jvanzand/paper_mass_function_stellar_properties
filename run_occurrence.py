@@ -167,8 +167,6 @@ RUN_CONFIGURATIONS = {
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
-#RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
-#RUNS_TO_DO = ['Cui_comparison_discussion']
 RUNS_TO_DO = None
 
 

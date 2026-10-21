@@ -284,8 +284,7 @@ POST_FIT_PRODUCTS = {
 # Names from POST_FIT_PRODUCTS to make when main() is called without
 # product_names (including ``python run_post_fit_analysis.py``). Set to None
 # to make every product.
-PRODUCTS_TO_MAKE = ["appendix_parameter_table", "one_param_table", "two_param_tables"]
-#PRODUCTS_TO_MAKE = None
+PRODUCTS_TO_MAKE = None
 
 
 # How each supported function receives the experiment's Tier 3 folder and,
