@@ -164,6 +164,27 @@ RUN_CONFIGURATIONS = {
         "make_plots":True,
     },
 
+    # Mass-ratio function over a period range instead of an SMA range.
+    # "qtrue_P" is the true-mass-ratio Tier 1 in orbital period; any "_P"
+    # Tier 1 (mtrue_P, msini_P, qtrue_P, qsini_P) takes period edges in days
+    # in "a_edges". One period bin, so it is marginalized (stack_dim "a")
+    # and the models are fit along mass ratio. 11.5-11,550 days is
+    # 0.1-10 AU around a 1 Msun star, matching paper_bounds.
+    "qtrue_period_bounds": {
+        "tier1_list": ["qtrue_P"],
+        "tier2_list": ["allstars"],
+        "tier3_list": ["qtrue_period_bounds"],
+        "a_edges": [11.5, 11550.0],
+        # Mass edges in M_Jup, converted to mass ratio at 1 Msun as for qtrue
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "stack_dim": "a",
+        "run_models_list": ["piecewise", "sigmoid", "logG"],
+        "plot_models_list": ["piecewise", "sigmoid", "logG"],
+
+        "run_fits": True,
+        "make_plots": True,
+    },
+
 }
 
 
