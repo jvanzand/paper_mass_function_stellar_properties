@@ -144,7 +144,7 @@ RUN_CONFIGURATIONS = {
         "plot_models_list": ["piecewise", "escarpment"],
 
         "piecewise_parameterization": "independent",
-        "run_fits": False,
+        "run_fits": True,
         "make_plots": True,
     },
     
@@ -190,7 +190,9 @@ RUN_CONFIGURATIONS = {
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
-RUNS_TO_DO = None
+#RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
+RUNS_TO_DO = ['qtrue_period_bounds']
+#RUNS_TO_DO = None
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
