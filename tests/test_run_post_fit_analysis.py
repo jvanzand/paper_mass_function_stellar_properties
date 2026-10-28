@@ -447,6 +447,5 @@ def test_appendix_ord_table_writes_limits_in_mjup_and_percent():
     _, arguments, _ = post_fit.resolve_product("appendix_ord_table")
     styles = arguments["bin_limit_styles"]
     assert styles["mtrue"] == {"unit": r"~\Mjup"}
-    assert styles["qtrue"] == {"scale": 100, "decimals": 1,
-                               "fine_below": 0.1, "unit": r"\%"}
+    assert styles["qtrue"] == {"scale": 100, "sig_figs": 2, "unit": r"\%"}
     assert arguments["tier1_page_breaks"] is False
