@@ -40,6 +40,11 @@ from occurrence import sampling_utils as su  # noqa: E402
 
 from config_dict import tier2_df_cuts_dict  # noqa: E402
 
+from astropy import constants as c
+import numpy as np
+Ms2Mj = c.M_sun/c.M_jup
+thompson_bounds = np.geomspace(0.001*Ms2Mj, 0.01*Ms2Mj, 6)
+
 
 # Each entry becomes one call to occurrence.run.run_multiple(). Keep separate
 # experiments here instead of copying or commenting out call blocks.
@@ -174,12 +179,12 @@ RUN_CONFIGURATIONS = {
         "tier1_list": ["qtrue_P"],
         "tier2_list": ["allstars"],
         "tier3_list": ["qtrue_period_bounds"],
-        "a_edges": [11.5, 11550.0],
+        "a_edges": [2.9*365.25, 94.4*365.25],
         # Mass edges in M_Jup, converted to mass ratio at 1 Msun as for qtrue
-        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "m_edges": thompson_bounds,
         "stack_dim": "a",
-        "run_models_list": ["piecewise", "sigmoid", "logG"],
-        "plot_models_list": ["piecewise", "sigmoid", "logG"],
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
 
         "run_fits": True,
         "make_plots": True,
@@ -227,16 +232,16 @@ RUN_DEFAULTS = {
     "plot_occurrence": True,
     "plot_density": True,
     "plot_cumulative": True,
-    "plot_corner": False,
-    "plot_catalog_roi": False,
-    "plot_roi_occurrence": False,
+    "plot_corner": True,
+    "plot_catalog_roi": True,
+    "plot_roi_occurrence": True,
     "plot_uncorrected_occurrence_mle": True,
     "occurrence_legend_loc": "upper right",
     "completeness_type": "single",
     "plot_tier1_maps": False,
     "integration_resolution": (100, 100),
     "use_average_completeness": True,
-    "piecewise_parameterization": "gp",
+    "piecewise_parameterization": "independent",
     "piecewise_gp_amplitude": 1.0,
     "piecewise_gp_length_scale_a": None,
     "piecewise_gp_length_scale_m": None,
