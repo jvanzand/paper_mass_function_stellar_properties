@@ -217,11 +217,17 @@ POST_FIT_PRODUCTS = {
         "run": "paper_bounds",
         "tier1_dirs": ["mtrue", "qtrue"],
         "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
-        # Start the mass-ratio section on a new page
-        "tier1_page_breaks": True,
-        # A row of bin limits opens each Tier 1 section (mass and mass ratio
-        # are binned differently); set False to omit it
+        # No forced page break before the mass-ratio section
+        "tier1_page_breaks": False,
+        # A row of bin limits, with every other cell blank, opens each Tier 1
+        # section (mass and mass ratio are binned differently); set False to
+        # omit it. Mass limits are in Jupiter masses; mass ratio limits are
+        # in percent, rounded to one decimal place to keep the columns narrow
         "show_bin_limits": True,
+        "bin_limit_styles": {
+            "mtrue": {"unit": r"~\Mjup"},
+            "qtrue": {"scale": 100, "decimals": 1, "unit": r"\%"},
+        },
         # Names shown in the first two columns
         "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
         "sample_labels": {
@@ -235,11 +241,14 @@ POST_FIT_PRODUCTS = {
             r"Each bin lists the posterior mode of the histogram model's "
             r"occurrence rate density (ORD) and its 68\% highest-density "
             r"interval, in companions per star per $\Delta\log a$ per "
-            r"$\Delta\log$ of the mass variable. Stellar subsamples are "
-            r"divided at $1~\Msun$, 0.0 dex, and 5.0 Gyr for stellar mass, "
-            r"metallicity, and age, respectively. $N_\star$ is the number of "
-            r"stars, $N_{\mathrm{eff}}$ the effective number of companions, "
-            r"and the completeness is averaged over the region of interest."
+            r"$\Delta\log$ of the mass variable. Mass bin limits are exact; "
+            r"mass ratio bin limits, equal to the corresponding mass limit "
+            r"divided by $1~\Msun$, have been rounded for concision. Stellar "
+            r"subsamples are divided at $1~\Msun$, 0.0 dex, and 5.0 Gyr for "
+            r"stellar mass, metallicity, and age, respectively. $N_\star$ is "
+            r"the number of stars, $N_{\mathrm{eff}}$ the effective number "
+            r"of companions, and the completeness is averaged over the "
+            r"region of interest."
         ),
     },
 

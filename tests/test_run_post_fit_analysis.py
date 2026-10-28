@@ -441,3 +441,11 @@ def test_appendix_ord_table_is_the_file_the_paper_collects(tmp_path):
     source = plan[collect.Path("ord_table_appendix.tex")]
     assert source == outputs["appendix_ord_table"]
     assert source.is_file()
+
+
+def test_appendix_ord_table_writes_limits_in_mjup_and_percent():
+    _, arguments, _ = post_fit.resolve_product("appendix_ord_table")
+    styles = arguments["bin_limit_styles"]
+    assert styles["mtrue"] == {"unit": r"~\Mjup"}
+    assert styles["qtrue"] == {"scale": 100, "decimals": 1, "unit": r"\%"}
+    assert arguments["tier1_page_breaks"] is False
