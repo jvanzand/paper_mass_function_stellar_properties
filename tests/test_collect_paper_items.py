@@ -130,3 +130,10 @@ def test_unnamed_figures_need_a_plot_label(tmp_path, monkeypatch):
     }])
     with pytest.raises(ValueError, match="PLOT_LABELS"):
         collect.collection_plan(tmp_path)
+
+
+def test_plan_collects_the_appendix_ord_table(tmp_path):
+    plan = collect.collection_plan(tmp_path)
+    assert plan[collect.Path("ord_table_appendix.tex")] == (
+        tmp_path / "paper_tables" / "ord_appendix_paper_bounds.tex"
+    )

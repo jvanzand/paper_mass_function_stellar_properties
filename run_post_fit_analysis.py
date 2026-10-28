@@ -209,6 +209,40 @@ POST_FIT_PRODUCTS = {
         ),
     },
 
+    # Appendix: histogram ORD in every mass bin for every sample, with each
+    # run's N_star, N_eff, and completeness. Unlike the other tables, its
+    # values are read from the saved summary dictionaries, not variables.tex.
+    "appendix_ord_table": {
+        "function": "make_appendix_ord_table",
+        "run": "paper_bounds",
+        "tier1_dirs": ["mtrue", "qtrue"],
+        "tier2_types": ["allstars", "Mstar", "FeH", "Act"],
+        # Start the mass-ratio section on a new page
+        "tier1_page_breaks": True,
+        # A row of bin limits opens each Tier 1 section (mass and mass ratio
+        # are binned differently); set False to omit it
+        "show_bin_limits": True,
+        # Names shown in the first two columns
+        "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
+        "sample_labels": {
+            "allstars": "All Stars",
+            "highMstar": r"High $M_\star$", "lowMstar": r"Low $M_\star$",
+            "highFeH": "High [Fe/H]", "lowFeH": "Low [Fe/H]",
+            "highAct": "Young", "lowAct": "Old",
+        },
+        # Table note (LaTeX), kept here so regenerating the table keeps it
+        "note": (
+            r"Each bin lists the posterior mode of the histogram model's "
+            r"occurrence rate density (ORD) and its 68\% highest-density "
+            r"interval, in companions per star per $\Delta\log a$ per "
+            r"$\Delta\log$ of the mass variable. Stellar subsamples are "
+            r"divided at $1~\Msun$, 0.0 dex, and 5.0 Gyr for stellar mass, "
+            r"metallicity, and age, respectively. $N_\star$ is the number of "
+            r"stars, $N_{\mathrm{eff}}$ the effective number of companions, "
+            r"and the completeness is averaged over the region of interest."
+        ),
+    },
+
     # Discussion: Three-parameter tables over the Miyazaki et al. (2023) cold-Jupiter
     #             region (references variables.tex)
     "three_param_tables_Miyazaki": {
@@ -307,6 +341,7 @@ TIER3_ARGUMENTS = {
     "make_variables": "tier3_dirs",
     "make_parameter_table": "t3",
     "make_appendix_parameter_table": "t3",
+    "make_appendix_ord_table": "t3",
     "make_one_parameter_table": "t3",
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",

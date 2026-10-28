@@ -399,3 +399,45 @@ def test_outputs_are_described_relative_to_the_results(tmp_path):
         {"a": plots / "one.png", "b": {"c": plots / "two.png"}}, tmp_path)
     assert described == "2 files in mtrue/allstars/run/plots/"
     assert post_fit._describe_output(None, tmp_path) == "done"
+
+
+def test_appendix_ord_table_reads_every_sample_of_the_run():
+    function, arguments, folders = post_fit.resolve_product(
+        "appendix_ord_table"
+    )
+    assert function == "make_appendix_ord_table"
+    assert arguments["t3"] == "paper_bounds"
+    assert arguments["tier1_dirs"] == ["mtrue", "qtrue"]
+    assert "run" not in arguments
+    assert sorted({folder.parent.name for folder in folders}) == [
+        "allstars", "highAct", "highFeH", "highMstar", "lowAct", "lowFeH",
+        "lowMstar",
+    ]
+    assert len(folders) == 14
+
+
+def test_appendix_ord_table_is_the_file_the_paper_collects(tmp_path):
+    import collect_paper_items as collect
+    import numpy as np
+
+    for tier1 in ("mtrue", "qtrue"):
+        for tier2 in ("allstars", "highMstar", "lowMstar", "highFeH",
+                      "lowFeH", "highAct", "lowAct"):
+            directory = tmp_path / tier1 / tier2 / "paper_bounds" / "saved_dicts"
+            directory.mkdir(parents=True)
+            np.savez(
+                directory / "summary_dict_piecewise.npz",
+                nstars=10, cell_weights=np.array([1.0, 2.0]),
+                cell_compl_single=0.5, n_abins=1, n_mbins=2,
+                a_m_lims_pairs=np.array([[[0.1, 10], [1, 2]],
+                                         [[0.1, 10], [2, 4]]]),
+                mode_ORD=np.array([0.1, 0.2]),
+                hdi_low_ORD=np.array([0.05, 0.1]),
+                hdi_high_ORD=np.array([0.2, 0.3]),
+            )
+    outputs = post_fit.main(["appendix_ord_table"], results_dir=tmp_path)
+
+    plan = collect.collection_plan(tmp_path)
+    source = plan[collect.Path("ord_table_appendix.tex")]
+    assert source == outputs["appendix_ord_table"]
+    assert source.is_file()
