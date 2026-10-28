@@ -222,11 +222,13 @@ POST_FIT_PRODUCTS = {
         # A row of bin limits, with every other cell blank, opens each Tier 1
         # section (mass and mass ratio are binned differently); set False to
         # omit it. Mass limits are in Jupiter masses; mass ratio limits are
-        # in percent, rounded to one decimal place to keep the columns narrow
+        # in percent, rounded to one decimal place (or to the first nonzero
+        # decimal place below 0.1%) to keep the columns narrow
         "show_bin_limits": True,
         "bin_limit_styles": {
             "mtrue": {"unit": r"~\Mjup"},
-            "qtrue": {"scale": 100, "decimals": 1, "unit": r"\%"},
+            "qtrue": {"scale": 100, "decimals": 1, "fine_below": 0.1,
+                      "unit": r"\%"},
         },
         # Names shown in the first two columns
         "tier1_labels": {"mtrue": "$M_c$", "qtrue": "$q$"},
