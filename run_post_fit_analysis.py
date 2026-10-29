@@ -189,8 +189,8 @@ POST_FIT_PRODUCTS = {
         # not reliable
         "model_samples": {"loglinear": [("mtrue", "allstars")]},
         "omit_occurrence": ["loglinear"],
-        # Its Delta BIC covers only that subset, so it is not comparable
-        "omit_delta_bic": ["loglinear"],
+        # Its BIC covers only that subset, so it is not comparable
+        "omit_bic": ["loglinear"],
         # Models fit in other runs, listed in the matching experiment's
         # rows: the escarpment is fit without GP smoothing to the full
         # samples in mass and mass ratio
@@ -210,8 +210,10 @@ POST_FIT_PRODUCTS = {
         "note": (
             r"Stellar mass, metallicity, and age subsamples are divided at "
             r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. Integrated "
-            r"occurrence rates have units of companions per star. We omit the "
-            r"integrated occurrence rate and $\Delta$ BIC for the log-linear "
+            r"occurrence rates have units of companions per star. Lower BIC "
+            r"values are preferred, and BICs can be compared only between "
+            r"models fit to the same sample. We omit the integrated "
+            r"occurrence rate and BIC for the log-linear "
             r"model because we fit it to only a subset of the catalog. We fit "
             r"the escarpment model in only two experiments: the full sample in "
             r"companion mass and the whole sample in mass ratio. In both cases, "
@@ -360,7 +362,7 @@ TIER3_ARGUMENTS = {
     "make_two_parameter_tables": "t3",
     "make_three_parameter_tables": "t3",
     "plot_companions_by_stellar_parameter": "tier3_dirs",
-    "calculate_all_delta_bics": "tier3_dirs",
+    "calculate_all_bics": "tier3_dirs",
 }
 # Functions that select each sample's stars from the catalog themselves
 SAMPLE_CATALOG_FUNCTIONS = {"make_variables"}
