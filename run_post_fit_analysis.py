@@ -159,13 +159,23 @@ POST_FIT_PRODUCTS = {
         "stellar_parameters": ["Mstar", "FeH", "Age"],
     },
 
-    # Sample: histograms of the full sample's stellar properties ("Mstar",
+    # Sample: stellar mass against metallicity for the full sample, with
+    # marginal histograms; points are colored by mass sample and shaped by
+    # metallicity sample, and dotted lines mark the dividing values. Drawn
+    # from the star catalog rather than any run and saved in
+    # results/paper_figures
+    "stellar_scatter": {
+        "function": "plot_stellar_mass_feh_scatter",
+    },
+
+    # Appendix: histograms of the full sample's stellar properties ("Mstar",
     # "FeH", and/or "Age"), drawn from the star catalog rather than any run
     # and saved in results/paper_figures; a dotted line marks the high/low
-    # dividing value
+    # dividing value. The paper uses only the age histogram, since the
+    # scatter plot shows mass and metallicity.
     "stellar_histograms": {
         "function": "plot_stellar_parameter_histograms",
-        "stellar_parameters": ["Mstar", "FeH", "Age"],
+        "stellar_parameters": ["Age"],
     },
 
     # Appendix: Model parameters for every sample (references variables.tex)
@@ -355,7 +365,9 @@ TIER3_ARGUMENTS = {
 # Functions that select each sample's stars from the catalog themselves
 SAMPLE_CATALOG_FUNCTIONS = {"make_variables"}
 # Plots the full sample from the star catalog; reads no results
-HISTOGRAM_FUNCTION = "plot_stellar_parameter_histograms"
+HISTOGRAM_FUNCTIONS = {
+    "plot_stellar_parameter_histograms", "plot_stellar_mass_feh_scatter",
+}
 TIER2_DIRS_FUNCTIONS = {
     "make_two_parameter_tables", "make_three_parameter_tables",
 }
@@ -506,7 +518,7 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
     function_name = spec.get("function")
     if function_name == CDF_FUNCTION:
         return _resolve_cdf_product(product_name, spec, results_dir)
-    if function_name == HISTOGRAM_FUNCTION:
+    if function_name in HISTOGRAM_FUNCTIONS:
         arguments = {
             key: value for key, value in spec.items() if key != "function"
         }
@@ -517,7 +529,7 @@ def resolve_product(product_name, results_dir=RESULTS_DIR):
         raise ValueError("{} uses unsupported function {!r}; supported: "
                          "{}".format(product_name, function_name,
                                      sorted(set(TIER3_ARGUMENTS) |
-                                            {CDF_FUNCTION, HISTOGRAM_FUNCTION})))
+                                            {CDF_FUNCTION} | HISTOGRAM_FUNCTIONS)))
     run_key = "runs" if function_name == "make_variables" else "run"
     other_key = "run" if run_key == "runs" else "runs"
     if run_key not in spec or other_key in spec:

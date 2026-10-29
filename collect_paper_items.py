@@ -78,10 +78,9 @@ PAPER_FIGURES = [
 
 # Figures of the whole sample, not tied to any run: file in
 # results/paper_figures/ (written by run_post_fit_analysis.py's
-# stellar_histograms product) mapped to its name in Figures/.
+# stellar_scatter and stellar_histograms products) mapped to its name in Figures/.
 PAPER_SAMPLE_FIGURES = {
-    "stellar_hist_mstar.png": "hist_Mstar.png",
-    "stellar_hist_feh.png": "hist_FeH.png",
+    "stellar_scatter_mass_feh.png": "scatter_Mstar_FeH.png",
     "stellar_hist_age.png": "hist_Age.png",
 }
 

@@ -137,3 +137,16 @@ def test_plan_collects_the_appendix_ord_table(tmp_path):
     assert plan[collect.Path("ord_table_appendix.tex")] == (
         tmp_path / "paper_tables" / "ord_appendix_paper_bounds.tex"
     )
+
+
+def test_plan_collects_the_mass_metallicity_scatter_and_age_histogram(tmp_path):
+    plan = collect.collection_plan(tmp_path)
+    figures = tmp_path / "paper_figures"
+    assert plan[collect.Path("Figures/scatter_Mstar_FeH.png")] == (
+        figures / "stellar_scatter_mass_feh.png"
+    )
+    assert plan[collect.Path("Figures/hist_Age.png")] == (
+        figures / "stellar_hist_age.png"
+    )
+    assert collect.Path("Figures/hist_Mstar.png") not in plan
+    assert collect.Path("Figures/hist_FeH.png") not in plan

@@ -449,3 +449,17 @@ def test_appendix_ord_table_writes_limits_in_mjup_and_percent():
     assert styles["mtrue"] == {"unit": r"~\Mjup"}
     assert styles["qtrue"] == {"scale": 100, "sig_figs": 2, "unit": r"\%"}
     assert arguments["tier1_page_breaks"] is False
+
+
+def test_stellar_figure_products_read_the_catalog_not_results(monkeypatch):
+    catalog = object()
+    monkeypatch.setattr(post_fit, "load_or_make_star_df", lambda: catalog)
+    for product, function in (
+            ("stellar_scatter", "plot_stellar_mass_feh_scatter"),
+            ("stellar_histograms", "plot_stellar_parameter_histograms")):
+        name, arguments, folders_read = post_fit.resolve_product(product)
+        assert name == function
+        assert arguments["sample_catalog"] is catalog
+        assert folders_read == []
+    _, arguments, _ = post_fit.resolve_product("stellar_histograms")
+    assert arguments["stellar_parameters"] == ["Age"]
