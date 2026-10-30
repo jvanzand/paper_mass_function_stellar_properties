@@ -116,10 +116,12 @@ POST_FIT_PRODUCTS = {
             r"Stellar masses are given in $\Msun$ and metallicities are given in "
             r"dex, with the dividing values for each at $1.0~\Msun$ and 0.0 dex, "
             r"respectively. Occurrence rates have units of companions per star, "
-            r"and are calculated using the histogram model. The last two columns "
-            r"give the ratio between the median values of the listed stellar "
-            r"parameter in the two samples. For metallicity, the ratios are "
-            r"between linear abundances, $10^{\Delta[\text{Fe/H}]}$."
+            r'and are calculated using the histogram model. The ``Significance" '
+            r"column provided the statistical significance of the difference "
+            r"between the occurrence rates in the High and Low subsamples. The "
+            r"last two columns give the ratio between the median values of the "
+            r"listed stellar parameter in the two samples. For metallicity, the "
+            r"ratios are between linear abundances, $10^{\Delta[\text{Fe/H}]}$."
         ),
     },
     
@@ -209,21 +211,19 @@ POST_FIT_PRODUCTS = {
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
             r"Stellar mass, metallicity, and age subsamples are divided at "
-            r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. The age old and "
-            r"young subsamples contain only the 378 CLS hosts with modeled ages. "
-            r"$N_\star$ is the number of stars, $N_{\mathrm{eff}}$ the effective "
-            r"number of companions, and $Q_{\text{avg}}$ the average "
+            r"$1~\Msun$, 0.0 dex, and 5.0 Gyr, respectively. The old and young "
+            r"subsamples contain only the 378 CLS hosts with modeled ages. "
+            r"$N_\star$ is the number of stars, $N_{\mathrm{eff}}$ the total "
+            r"number of fractional companions, and $Q_{\text{avg}}$ the average "
             r"completeness over the region of interest: $0.4-50~\Mjup$ (or the "
             r"equivalent mass ratios) and $0.1-10$ AU. Integrated occurrence "
             r"rates have units of companions per star. The amplitude parameters "
             r"$A$, $B$, $C$, and $D$ have units of companions per star per "
             r"$\Delta\log a$ per $\Delta\log~M_c$ (or per $\Delta\log~q$ for "
-            r"mass ratio fits). Lower BIC values are preferred, and BICs can be "
-            r"compared only between models fit to the same sample. We omit the "
-            r"integrated occurrence rate and BIC for the log-linear model "
-            r"because we fit it to only a subset of the catalog. We fit the "
-            r"escarpment model in only two experiments: the full sample in "
-            r"companion mass and the full sample in mass ratio."
+            r"mass ratio fits). We omit the integrated occurrence rate and BIC "
+            r"for the log-linear model because we fit it to only a subset of the "
+            r"catalog. We fit the escarpment model in only two experiments: the "
+            r"full sample in companion mass and the full sample in mass ratio."
         ),
     },
 
@@ -259,13 +259,13 @@ POST_FIT_PRODUCTS = {
             r"Each bin lists the posterior mode of the histogram model's "
             r"occurrence rate density (ORD) and its 68\% highest-density "
             r"interval, in companions per star per $\Delta\log a$ per "
-            r"$\Delta\log$ of the mass variable. The integrated rates are those "
-            r"of the histogram model. Mass bin limits are exact; mass ratio bin "
+            r"$\Delta\log$ of the mass variable. Integrated rates have units of "
+            r"companions per star. Mass bin limits are exact; mass ratio bin "
             r"limits, equal to the corresponding mass limit divided by "
             r"$1~\Msun$, have been rounded for concision. See Table "
             r"\ref{tab:model_params_appendix} for the subsample divisions, the "
             r"definitions of $N_\star$, $N_{\mathrm{eff}}$, and "
-            r"$Q_{\text{avg}}$, and the units of the integrated rates."
+            r"$Q_{\text{avg}}$."
         ),
     },
 
