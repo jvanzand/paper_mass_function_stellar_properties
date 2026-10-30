@@ -117,7 +117,7 @@ POST_FIT_PRODUCTS = {
             r"dex, with the dividing values for each at $1.0~\Msun$ and 0.0 dex, "
             r"respectively. Occurrence rates have units of companions per star, "
             r'and are calculated using the histogram model. The ``Significance" '
-            r"column provided the statistical significance of the difference "
+            r"column provides the statistical significance of the difference "
             r"between the occurrence rates in the High and Low subsamples. The "
             r"last two columns give the ratio between the median values of the "
             r"listed stellar parameter in the two samples. For metallicity, the "
@@ -263,8 +263,8 @@ POST_FIT_PRODUCTS = {
             r"companions per star. Mass bin limits are exact; mass ratio bin "
             r"limits, equal to the corresponding mass limit divided by "
             r"$1~\Msun$, have been rounded for concision. See Table "
-            r"\ref{tab:model_params_appendix} for the subsample divisions, the "
-            r"definitions of $N_\star$, $N_{\mathrm{eff}}$, and "
+            r"\ref{tab:model_params_appendix} for the subsample divisions and "
+            r"the definitions of $N_\star$, $N_{\mathrm{eff}}$, and "
             r"$Q_{\text{avg}}$."
         ),
     },
