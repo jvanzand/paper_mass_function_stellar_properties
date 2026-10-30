@@ -259,13 +259,13 @@ POST_FIT_PRODUCTS = {
             r"Each bin lists the posterior mode of the histogram model's "
             r"occurrence rate density (ORD) and its 68\% highest-density "
             r"interval, in companions per star per $\Delta\log a$ per "
-            r"$\Delta\log$ of the mass variable. Integrated rates have units of "
-            r"companions per star. Mass bin limits are exact; mass ratio bin "
-            r"limits, equal to the corresponding mass limit divided by "
-            r"$1~\Msun$, have been rounded for concision. See Table "
-            r"\ref{tab:model_params_appendix} for the subsample divisions and "
-            r"the definitions of $N_\star$, $N_{\mathrm{eff}}$, and "
-            r"$Q_{\text{avg}}$."
+            r"$\Delta\log$ of the mass variable. All fits were performed using "
+            r"GP smoothing. Integrated rates have units of companions per star. "
+            r"Mass bin limits are exact; mass ratio bin limits, equal to the "
+            r"corresponding mass limit divided by $1~\Msun$, have been rounded "
+            r"for concision. See Table \ref{tab:model_params_appendix} for the "
+            r"subsample divisions and the definitions of $N_\star$, "
+            r"$N_{\mathrm{eff}}$, and $Q_{\text{avg}}$."
         ),
     },
 
