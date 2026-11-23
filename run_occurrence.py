@@ -186,17 +186,32 @@ RUN_CONFIGURATIONS = {
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
+        "run_fits": False,
+        "make_plots": False,
+    },
+
+    # Appendix item for reviewer: compare mass funcs over different SMA ranges
+    "appendix_two_SMA_ranges": {
+        "tier1_list": ["mtrue"],
+        "tier2_list": ["allstars"],
+        "tier3_list": ["appendix_two_SMA_ranges"],
+        "a_edges": [0.1, 1, 10],
+        # Mass edges in M_Jup, converted to mass ratio at 1 Msun as for qtrue
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
+        "stack_dim": "a",
+        "run_models_list": ["piecewise"],
+        "plot_models_list": ["piecewise"],
+
         "run_fits": True,
         "make_plots": True,
     },
-
 }
 
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
 #RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
-RUNS_TO_DO = ['qtrue_period_bounds']
+RUNS_TO_DO = ['appendix_two_SMA_ranges']
 #RUNS_TO_DO = None
 
 
@@ -260,8 +275,8 @@ RUN_DEFAULTS = {
     "bpl_slope_bounds": (-4.0, 4.0),
     "loglinear_amplitude_bounds": (1e-6, 10.0),
     "nwalkers": 50,
-    "nsteps": 5000,
-    "burnin": 2000,
+    "nsteps": 500,
+    "burnin": 200,
     # Production and burn-in steps for the piecewise model alone; None uses
     # nsteps and burnin.
     "piecewise_nsteps": 30000,
@@ -400,6 +415,41 @@ def load_or_make_star_df(cache_path=STAR_CATALOG, rebuild=False):
         json.dump(cached, stream, indent=2, sort_keys=True)
         stream.write("\n")
     return star_df
+
+
+# # >>>>>>>>>>>>>>>>>>>> TEMPORARY: cls_in_pool experiment >>>>>>>>>>>>>>>>>>>>
+# # Restricts every run, and the post-fit analysis, to the 622 hosts listed in
+# # cls_in_pool.csv, matched to the catalog's star_name by the file's cls_name
+# # column. Results go to results_cls_in_pool/ so the main results/ are neither
+# # reused nor overwritten. Set USE_CLS_IN_POOL = False to switch it off, or
+# # delete everything between the TEMPORARY markers to remove it.
+# # Do not run collect_paper_items.py while it is on: it would copy these
+# # results into paper_items/.
+# USE_CLS_IN_POOL = True
+# CLS_IN_POOL_FILE = PROJECT_DIR / "cls_in_pool.csv"
+# CLS_IN_POOL_COUNT = 622
+#
+# if USE_CLS_IN_POOL:
+#     RESULTS_DIR = PROJECT_DIR / "results_cls_in_pool"
+#     _load_full_star_df = load_or_make_star_df
+#
+#     def load_or_make_star_df(cache_path=STAR_CATALOG, rebuild=False):
+#         """The full catalog restricted to the hosts in cls_in_pool.csv."""
+#         star_df = _load_full_star_df(cache_path=cache_path, rebuild=rebuild)
+#         pool = pd.read_csv(CLS_IN_POOL_FILE, dtype={"cls_name": str})
+#         missing = sorted(set(pool["cls_name"]) - set(star_df["star_name"]))
+#         if missing or len(pool) != CLS_IN_POOL_COUNT:
+#             raise ValueError(
+#                 "cls_in_pool.csv should list {} catalog stars; it lists {}, "
+#                 "of which these are not in the catalog: {}".format(
+#                     CLS_IN_POOL_COUNT, len(pool), missing
+#                 )
+#             )
+#         star_df = star_df[star_df["star_name"].isin(pool["cls_name"])]
+#         print("TEMPORARY cls_in_pool experiment: {} of the catalog's stars, "
+#               "results in {}".format(len(star_df), RESULTS_DIR))
+#         return star_df.reset_index(drop=True)
+# # <<<<<<<<<<<<<<<<<<<< END TEMPORARY: cls_in_pool experiment <<<<<<<<<<<<<<<<<
 
 
 def load_local_paths(path=LOCAL_PATHS_FILE):
