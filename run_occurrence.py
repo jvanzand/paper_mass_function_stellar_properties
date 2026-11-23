@@ -241,7 +241,7 @@ RUN_DEFAULTS = {
     "plot_tier1_maps": False,
     "integration_resolution": (100, 100),
     "use_average_completeness": True,
-    "piecewise_parameterization": "independent",
+    "piecewise_parameterization": "gp",
     "piecewise_gp_amplitude": 1.0,
     "piecewise_gp_length_scale_a": None,
     "piecewise_gp_length_scale_m": None,
