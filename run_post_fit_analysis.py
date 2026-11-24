@@ -216,7 +216,7 @@ POST_FIT_PRODUCTS = {
             r"$N_\star$ is the number of stars, $N_{\mathrm{eff}}$ the total "
             r"number of fractional companions, and $Q_{\text{avg}}$ the average "
             r"completeness over the region of interest: $0.4-50~\Mjup$ (or the "
-            r"equivalent mass ratios) and $0.1-10$ AU. Integrated occurrence "
+            r"equivalent mass ratios) and $0.1-10$ au. Integrated occurrence "
             r"rates have units of companions per star. The amplitude parameters "
             r"$A$, $B$, $C$, and $D$ have units of companions per star per "
             r"$\Delta\log a$ per $\Delta\log~M_c$ (or per $\Delta\log~q$ for "
@@ -257,7 +257,7 @@ POST_FIT_PRODUCTS = {
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
             r"Each bin lists the posterior mode of the histogram model's "
-            r"occurrence rate density (ORD) and its 68\% highest-density "
+            r"occurrence rate density $\Gamma$ and its 68\% highest-density "
             r"interval, in companions per star per $\Delta\log a$ per "
             r"$\Delta\log$ of the mass variable. All fits were performed using "
             r"GP smoothing. Integrated rates have units of companions per star. "

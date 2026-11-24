@@ -174,7 +174,7 @@ RUN_CONFIGURATIONS = {
     # Tier 1 (mtrue_P, msini_P, qtrue_P, qsini_P) takes period edges in days
     # in "a_edges". One period bin, so it is marginalized (stack_dim "a")
     # and the models are fit along mass ratio. 11.5-11,550 days is
-    # 0.1-10 AU around a 1 Msun star, matching paper_bounds.
+    # 0.1-10 au around a 1 Msun star, matching paper_bounds.
     "qtrue_period_bounds": {
         "tier1_list": ["qtrue_P"],
         "tier2_list": ["allstars"],
