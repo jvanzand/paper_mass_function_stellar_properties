@@ -126,7 +126,7 @@ RUN_CONFIGURATIONS = {
         "tier2_list": ["allstars"],
         "plot_models_list": ["piecewise", "loglinear"],
 
-        "make_plots": True,
+        "make_plots": False,
         "plot_density": True,
         "plot_occurrence": False,
         "plot_cumulative": False,
@@ -149,7 +149,7 @@ RUN_CONFIGURATIONS = {
         "plot_models_list": ["piecewise", "escarpment"],
 
         "piecewise_parameterization": "independent",
-        "run_fits": True,
+        "run_fits": False,
         "make_plots": True,
     },
     
@@ -187,32 +187,48 @@ RUN_CONFIGURATIONS = {
         "plot_models_list": ["piecewise"],
 
         "run_fits": False,
-        "make_plots": False,
+        "make_plots": True,
     },
 
     # Appendix item for reviewer: compare mass funcs over different SMA ranges
     "appendix_two_SMA_ranges": {
         "tier1_list": ["mtrue"],
-        "tier2_list": ["allstars"],
+        "tier2_list": ["highMstar", "lowMstar"],
         "tier3_list": ["appendix_two_SMA_ranges"],
         "a_edges": [0.1, 1, 10],
         # Mass edges in M_Jup, converted to mass ratio at 1 Msun as for qtrue
         "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
         "stack_dim": "a",
+        "run_models_list": ["piecewise", "logG", "sigmoid"],
+        "plot_models_list": ["piecewise", "logG", "sigmoid"],
+
+        "run_fits": False,
+        "make_plots": True,
+    },
+    
+    "one_time_test": {
+        "tier1_list": ["mtrue", "qtrue"],
+        "tier2_list": ["highMstar", "lowMstar",
+        ],
+        "tier3_list": ["one_time_test"],
+        "a_edges": [0.1, 10.0],
+        "m_edges": [0.4, 0.8, 1.6, 3.2, 6.4, 13.0, 26.0, 50.0],
         "run_models_list": ["piecewise"],
         "plot_models_list": ["piecewise"],
 
-        "run_fits": True,
+        "run_fits": False,
         "make_plots": True,
     },
+    
+    
 }
 
 
 # Names from RUN_CONFIGURATIONS to execute when main() is called without
 # run_names (including ``python run_occurrence.py``). Set to None to run every entry.
 #RUNS_TO_DO = ["stellar3params", "stellar3params_Miyazaki", "paper_bounds_loglinear"]
-RUNS_TO_DO = ['appendix_two_SMA_ranges']
-#RUNS_TO_DO = None
+#RUNS_TO_DO = ['one_time_test']
+RUNS_TO_DO = None
 
 
 # Keys a run with ``reuse_fits_from`` may set. Everything else, including bin
