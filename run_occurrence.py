@@ -126,7 +126,7 @@ RUN_CONFIGURATIONS = {
         "tier2_list": ["allstars"],
         "plot_models_list": ["piecewise", "loglinear"],
 
-        "make_plots": False,
+        "make_plots": True,
         "plot_density": True,
         "plot_occurrence": False,
         "plot_cumulative": False,
