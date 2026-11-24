@@ -257,7 +257,7 @@ POST_FIT_PRODUCTS = {
         # Table note (LaTeX), kept here so regenerating the table keeps it
         "note": (
             r"Each bin lists the posterior mode of the histogram model's "
-            r"occurrence rate density $\Gamma$ and its 68\% highest-density "
+            r"occurrence rate density $\lambda$ and its 68\% highest-density "
             r"interval, in companions per star per $\Delta\log a$ per "
             r"$\Delta\log$ of the mass variable. All fits were performed using "
             r"GP smoothing. Integrated rates have units of companions per star. "
