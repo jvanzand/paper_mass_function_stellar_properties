@@ -67,6 +67,8 @@ PAPER_FIGURES = [
               "highMstar", "lowMstar",]),
     *_figures("occurrence_ORD.png", "paper_bounds_noGP", "qtrue", [
               "allstars",]),
+    *_figures("occurrence_ORD.png", "appendix_two_SMA_ranges", "mtrue", [
+              "highMstar", "lowMstar",]),
     # Discussion: normalized model CDFs for every stellar sample pair, made by
     # run_post_fit_analysis.py's cdf_comparison product and saved with the
     # catalog plots
