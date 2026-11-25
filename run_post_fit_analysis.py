@@ -51,8 +51,12 @@ POST_FIT_PRODUCTS = {
     # the three-parameter subsets. Each run contributes the samples it has.
     "variables": {
         "function": "make_variables",
+        # appendix_two_SMA_ranges adds the log-Gaussian mu and sigmoid
+        # transition point of the high/low-mass samples in 0.1-1 au (Bin A
+        # Zero) and 1-10 au (Bin A One), e.g.
+        # \McHighMstarAppendixTwoSMARangesLogGParamMuBinaOne
         "runs": ["paper_bounds", "paper_bounds_noGP",
-                 "Cui_comparison_discussion"],
+                 "Cui_comparison_discussion", "appendix_two_SMA_ranges"],
         "three_parameter_runs": ["stellar3params", "stellar3params_Miyazaki"],
         # Mass-metallicity subsets for the two-parameter tables
         "two_parameter_runs": ["stellar2params"],
